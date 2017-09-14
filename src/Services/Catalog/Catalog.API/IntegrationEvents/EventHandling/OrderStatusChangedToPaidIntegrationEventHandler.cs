@@ -1,12 +1,13 @@
-﻿namespace Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.EventHandling
+﻿using NServiceBus;
+
+namespace Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.EventHandling
 {
-    using BuildingBlocks.EventBus.Abstractions;
     using System.Threading.Tasks;
     using Infrastructure;
     using Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.Events;
 
     public class OrderStatusChangedToPaidIntegrationEventHandler : 
-        IIntegrationEventHandler<OrderStatusChangedToPaidIntegrationEvent>
+        IHandleMessages<OrderStatusChangedToPaidIntegrationEvent>
     {
         private readonly CatalogContext _catalogContext;
 
@@ -15,10 +16,10 @@
             _catalogContext = catalogContext;
         }
 
-        public async Task Handle(OrderStatusChangedToPaidIntegrationEvent command)
+        public async Task Handle(OrderStatusChangedToPaidIntegrationEvent message, IMessageHandlerContext context)
         {
             //we're not blocking stock/inventory
-            foreach (var orderStockItem in command.OrderStockItems)
+            foreach (var orderStockItem in message.OrderStockItems)
             {
                 var catalogItem = _catalogContext.CatalogItems.Find(orderStockItem.ProductId);
 

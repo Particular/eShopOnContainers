@@ -3,11 +3,6 @@ using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Azure.ServiceBus;
-using Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
-using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
-using Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
-using Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
 using Microsoft.eShopOnContainers.Services.Locations.API.Infrastructure;
 using Microsoft.eShopOnContainers.Services.Locations.API.Infrastructure.Filters;
 using Microsoft.eShopOnContainers.Services.Locations.API.Infrastructure.Repositories;
@@ -20,8 +15,11 @@ using RabbitMQ.Client;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
+using NServiceBus;
+using NServiceBus.Persistence.Sql;
 
 namespace Microsoft.eShopOnContainers.Services.Locations.API
 {
@@ -185,26 +183,30 @@ namespace Microsoft.eShopOnContainers.Services.Locations.API
 
         private void RegisterEventBus(IServiceCollection services)
         {
-            if (Configuration.GetValue<bool>("AzureServiceBusEnabled"))
-            {
-                services.AddSingleton<IEventBus, EventBusServiceBus>(sp =>
-                {
-                    var serviceBusPersisterConnection = sp.GetRequiredService<IServiceBusPersisterConnection>();
-                    var iLifetimeScope = sp.GetRequiredService<ILifetimeScope>();
-                    var logger = sp.GetRequiredService<ILogger<EventBusServiceBus>>();
-                    var eventBusSubcriptionsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
-                    var subscriptionClientName = Configuration["SubscriptionClientName"];
+            // NServiceBus
+            var endpointConfiguration = new EndpointConfiguration("Basket");
 
-                    return new EventBusServiceBus(serviceBusPersisterConnection, logger,
-                        eventBusSubcriptionsManager, subscriptionClientName, iLifetimeScope);
-                });
-            }
-            else
-            {
-                services.AddSingleton<IEventBus, EventBusRabbitMQ>();
-            }
+            // Configure RabbitMQ transport
+            var transport = endpointConfiguration.UseTransport<RabbitMQTransport>();
+            transport.UseConventionalRoutingTopology();
+            transport.ConnectionString("host=localhost"); // TODO: Pull this from config
 
-            services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
+            // Configure SQL Server persistence
+            var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
+            persister.SqlDialect<SqlDialect.MsSqlServer>();
+            persister.ConnectionBuilder(() => new SqlConnection("")); // TODO: Get SQL working with this service! :)
+
+            // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
+            // You might want to turn this off in production, so that DevOps can use scripts to create these.
+            endpointConfiguration.EnableInstallers();
+
+            // Define conventions
+            var conventions = endpointConfiguration.Conventions();
+            conventions.DefiningEventsAs(c => c.Namespace != null && c.Name.EndsWith("IntegrationEvent"));
+
+            // Start the endpoint and register it with ASP.NET Core DI
+            var endpoint = Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
+            services.AddSingleton<IEndpointInstance>(endpoint);
         }
     }
 }

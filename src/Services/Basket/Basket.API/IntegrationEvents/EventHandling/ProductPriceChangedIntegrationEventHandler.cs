@@ -1,13 +1,13 @@
-﻿using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
-using Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.Events;
+﻿using Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.Events;
 using Microsoft.eShopOnContainers.Services.Basket.API.Model;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using NServiceBus;
 
 namespace Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.EventHandling
 {
-    public class ProductPriceChangedIntegrationEventHandler : IIntegrationEventHandler<ProductPriceChangedIntegrationEvent>
+    public class ProductPriceChangedIntegrationEventHandler : IHandleMessages<ProductPriceChangedIntegrationEvent>
     {
         private readonly IBasketRepository _repository;
 
@@ -16,7 +16,7 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.Even
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
-        public async Task Handle(ProductPriceChangedIntegrationEvent @event)
+        public async Task Handle(ProductPriceChangedIntegrationEvent message, IMessageHandlerContext context)
         {
             var userIds = await _repository.GetUsersAsync();
             
@@ -24,7 +24,7 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.Even
             {
                 var basket = await _repository.GetBasketAsync(id);
 
-                await UpdatePriceInBasketItems(@event.ProductId, @event.NewPrice, @event.OldPrice, basket);                      
+                await UpdatePriceInBasketItems(message.ProductId, message.NewPrice, message.OldPrice, basket);                      
             }
         }
 
@@ -46,6 +46,8 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.Even
                 await _repository.UpdateBasketAsync(basket);
             }         
         }
+
+        
     }
 }
 

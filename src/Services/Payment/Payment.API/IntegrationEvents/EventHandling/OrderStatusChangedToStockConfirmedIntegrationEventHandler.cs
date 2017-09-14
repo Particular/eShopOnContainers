@@ -1,28 +1,24 @@
-﻿namespace Payment.API.IntegrationEvents.EventHandling
+﻿using NServiceBus;
+
+namespace Payment.API.IntegrationEvents.EventHandling
 {
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Events;
     using Microsoft.Extensions.Options;
     using Payment.API.IntegrationEvents.Events;
     using System.Threading.Tasks;
 
     public class OrderStatusChangedToStockConfirmedIntegrationEventHandler : 
-        IIntegrationEventHandler<OrderStatusChangedToStockConfirmedIntegrationEvent>
+        IHandleMessages<OrderStatusChangedToStockConfirmedIntegrationEvent>
     {
-        private readonly IEventBus _eventBus;
         private readonly PaymentSettings _settings;
 
-        public OrderStatusChangedToStockConfirmedIntegrationEventHandler(IEventBus eventBus, 
+        public OrderStatusChangedToStockConfirmedIntegrationEventHandler( 
             IOptionsSnapshot<PaymentSettings> settings)
         {
-            _eventBus = eventBus;
             _settings = settings.Value;
-        }         
+        }
 
-        public async Task Handle(OrderStatusChangedToStockConfirmedIntegrationEvent @event)
+        public async Task Handle(OrderStatusChangedToStockConfirmedIntegrationEvent message, IMessageHandlerContext context)
         {
-            IntegrationEvent orderPaymentIntegrationEvent;
-
             //Business feature comment:
             // When OrderStatusChangedToStockConfirmed Integration Event is handled.
             // Here we're simulating that we'd be performing the payment against any payment gateway
@@ -31,16 +27,12 @@
 
             if (_settings.PaymentSucceded)
             {
-                orderPaymentIntegrationEvent = new OrderPaymentSuccededIntegrationEvent(@event.OrderId);
+                await context.Publish(new OrderPaymentSuccededIntegrationEvent(message.OrderId));
             }
             else
             {
-                orderPaymentIntegrationEvent = new OrderPaymentFailedIntegrationEvent(@event.OrderId);
+                await context.Publish(new OrderPaymentFailedIntegrationEvent(message.OrderId));
             }
-
-            _eventBus.Publish(orderPaymentIntegrationEvent);
-
-            await Task.CompletedTask;
-        }
+        }       
     }
 }

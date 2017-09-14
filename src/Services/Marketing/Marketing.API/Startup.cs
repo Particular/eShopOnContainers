@@ -1,15 +1,13 @@
-﻿namespace Microsoft.eShopOnContainers.Services.Marketing.API
+﻿using NServiceBus;
+using NServiceBus.Persistence.Sql;
+
+namespace Microsoft.eShopOnContainers.Services.Marketing.API
 {
     using AspNetCore.Builder;
     using AspNetCore.Hosting;
     using AspNetCore.Http;
     using Autofac;
     using Autofac.Extensions.DependencyInjection;
-    using Azure.ServiceBus;
-    using BuildingBlocks.EventBus;
-    using BuildingBlocks.EventBus.Abstractions;
-    using BuildingBlocks.EventBusRabbitMQ;
-    using BuildingBlocks.EventBusServiceBus;
     using EntityFrameworkCore;
     using Extensions.Configuration;
     using Extensions.DependencyInjection;
@@ -22,7 +20,6 @@
     using IntegrationEvents.Events;
     using Marketing.API.IntegrationEvents.Handlers;
     using Microsoft.EntityFrameworkCore.Diagnostics;
-    using Polly;
     using RabbitMQ.Client;
     using Swashbuckle.AspNetCore.Swagger;
     using System;
@@ -53,9 +50,9 @@
 
             services.Configure<MarketingSettings>(Configuration);
 
-            ConfigureAuthService(services);            
+            ConfigureAuthService(services);
 
-            services.AddHealthChecks(checks => 
+            services.AddHealthChecks(checks =>
             {
                 checks.AddValueTaskCheck("HTTP Endpoint", () => new ValueTask<IHealthCheckResult>(HealthCheckResult.Healthy("Ok")));
 
@@ -117,7 +114,7 @@
                     }
                     return new DefaultRabbitMQPersistentConnection(factory, logger);
                 });
-            }            
+            }
 
             // Add framework services.
             services.AddSwaggerGen(options =>
@@ -171,14 +168,14 @@
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env,ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             var pathBase = Configuration["PATH_BASE"];
             if (!string.IsNullOrEmpty(pathBase))
             {
                 app.UsePathBase(pathBase);
-            }    
-            
+            }
+
             app.UseCors("CorsPolicy");
 
             ConfigureAuth(app);
@@ -190,7 +187,7 @@
                {
                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
                    c.ConfigureOAuth2("marketingswaggerui", "", "", "Marketing Swagger UI");
-               });            
+               });
 
             var context = (MarketingContext)app
                         .ApplicationServices.GetService(typeof(MarketingContext));
@@ -214,28 +211,34 @@
                 });
         }
 
-            private void RegisterEventBus(IServiceCollection services)
+        private void RegisterEventBus(IServiceCollection services)
         {
-            if (Configuration.GetValue<bool>("AzureServiceBusEnabled"))
-            {
-                services.AddSingleton<IEventBus, EventBusServiceBus>(sp =>
-                {
-                    var serviceBusPersisterConnection = sp.GetRequiredService<IServiceBusPersisterConnection>();
-                    var iLifetimeScope = sp.GetRequiredService<ILifetimeScope>();
-                    var logger = sp.GetRequiredService<ILogger<EventBusServiceBus>>();
-                    var eventBusSubcriptionsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
-                    var subscriptionClientName = Configuration["SubscriptionClientName"];
+            // NServiceBus
+            var endpointConfiguration = new EndpointConfiguration("Basket");
 
-                    return new EventBusServiceBus(serviceBusPersisterConnection, logger,
-                        eventBusSubcriptionsManager, subscriptionClientName, iLifetimeScope);
-                });
-            }
-            else
-            {
-                services.AddSingleton<IEventBus, EventBusRabbitMQ>();
-            }
+            // Configure RabbitMQ transport
+            var transport = endpointConfiguration.UseTransport<RabbitMQTransport>();
+            transport.UseConventionalRoutingTopology();
+            transport.ConnectionString("host=localhost"); // TODO: Pull this from config
 
-            services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
+            // Configure SQL Server persistence
+            var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
+            persister.SqlDialect<SqlDialect.MsSqlServer>();
+            persister.ConnectionBuilder(() => new SqlConnection("")); // TODO: Get SQL working with this service! :)
+
+            // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
+            // You might want to turn this off in production, so that DevOps can use scripts to create these.
+            endpointConfiguration.EnableInstallers();
+
+            // Define conventions
+            var conventions = endpointConfiguration.Conventions();
+            conventions.DefiningEventsAs(c => c.Namespace != null && c.Name.EndsWith("IntegrationEvent"));
+
+            // Start the endpoint and register it with ASP.NET Core DI
+            var endpoint = Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
+            services.AddSingleton<IEndpointInstance>(endpoint);
+
+            // Register handlers with ASP.NET Core DI
             services.AddTransient<UserLocationUpdatedIntegrationEventHandler>();
         }
 
@@ -271,6 +274,6 @@
                         logger.LogTrace($"[{prefix}] Exception {exception.GetType().Name} with message ${exception.Message} detected on attempt {retry} of {retries}");
                     }
                 );
-        }       
+        }
     }
 }
