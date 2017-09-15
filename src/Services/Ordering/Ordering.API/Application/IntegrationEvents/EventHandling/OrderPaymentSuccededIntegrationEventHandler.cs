@@ -1,12 +1,13 @@
-﻿namespace Ordering.API.Application.IntegrationEvents.EventHandling
+﻿using NServiceBus;
+
+namespace Ordering.API.Application.IntegrationEvents.EventHandling
 {
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
     using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
     using Ordering.API.Application.IntegrationEvents.Events;
     using System.Threading.Tasks;
 
     public class OrderPaymentSuccededIntegrationEventHandler : 
-        IIntegrationEventHandler<OrderPaymentSuccededIntegrationEvent>
+        IHandleMessages<OrderPaymentSuccededIntegrationEvent>
     {
         private readonly IOrderRepository _orderRepository;
 
@@ -15,13 +16,13 @@
             _orderRepository = orderRepository;
         }
 
-        public async Task Handle(OrderPaymentSuccededIntegrationEvent @event)
+        public async Task Handle(OrderPaymentSuccededIntegrationEvent message, IMessageHandlerContext context)
         {
-            var orderToUpdate = await _orderRepository.GetAsync(@event.OrderId);
+            var orderToUpdate = await _orderRepository.GetAsync(message.OrderId);
 
             orderToUpdate.SetPaidStatus();
 
             await _orderRepository.UnitOfWork.SaveEntitiesAsync();
-        }
+        }        
     }
 }

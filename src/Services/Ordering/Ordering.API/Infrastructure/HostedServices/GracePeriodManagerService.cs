@@ -1,7 +1,8 @@
-﻿namespace Ordering.API.Infrastructure.HostedServices
+﻿using NServiceBus;
+
+namespace Ordering.API.Infrastructure.HostedServices
 {
     using Dapper;
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
     using Microsoft.eShopOnContainers.Services.Ordering.API;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
@@ -15,16 +16,16 @@
     public class GracePeriodManagerService
         : HostedService
     {
+        private readonly IEndpointInstance _endpoint;
         private readonly OrderingSettings _settings;
         private readonly ILogger<GracePeriodManagerService> _logger;
-        private readonly IEventBus _eventBus;
 
         public GracePeriodManagerService(IOptions<OrderingSettings> settings,
-            IEventBus eventBus,
+            IEndpointInstance endpoint,
             ILogger<GracePeriodManagerService> logger)
         {
+            _endpoint = endpoint;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
             _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
         }
@@ -57,7 +58,7 @@
             foreach (var orderId in orderIds)
             {
                 var confirmGracePeriodEvent = new GracePeriodConfirmedIntegrationEvent(orderId);
-                _eventBus.Publish(confirmGracePeriodEvent);
+                _endpoint.Publish(confirmGracePeriodEvent).GetAwaiter().GetResult();
             }
         }
 

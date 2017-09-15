@@ -1,12 +1,13 @@
-﻿namespace Ordering.API.Application.IntegrationEvents.EventHandling
+﻿using NServiceBus;
+
+namespace Ordering.API.Application.IntegrationEvents.EventHandling
 {
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
     using System.Threading.Tasks;
     using Events;
     using System.Linq;
     using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
 
-    public class OrderStockRejectedIntegrationEventHandler : IIntegrationEventHandler<OrderStockRejectedIntegrationEvent>
+    public class OrderStockRejectedIntegrationEventHandler : IHandleMessages<OrderStockRejectedIntegrationEvent>
     {
         private readonly IOrderRepository _orderRepository;
 
@@ -15,11 +16,11 @@
             _orderRepository = orderRepository;
         }
 
-        public async Task Handle(OrderStockRejectedIntegrationEvent @event)
+        public async Task Handle(OrderStockRejectedIntegrationEvent message, IMessageHandlerContext context)
         {
-            var orderToUpdate = await _orderRepository.GetAsync(@event.OrderId);
+            var orderToUpdate = await _orderRepository.GetAsync(message.OrderId);
 
-            var orderStockRejectedItems = @event.OrderStockItems
+            var orderStockRejectedItems = message.OrderStockItems
                 .FindAll(c => !c.HasStock)
                 .Select(c => c.ProductId);
 

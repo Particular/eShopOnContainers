@@ -1,11 +1,11 @@
-﻿using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
-using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
+﻿using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
 using Ordering.API.Application.IntegrationEvents.Events;
 using System.Threading.Tasks;
+using NServiceBus;
 
 namespace Ordering.API.Application.IntegrationEvents.EventHandling
 {
-    public class GracePeriodConfirmedIntegrationEventHandler : IIntegrationEventHandler<GracePeriodConfirmedIntegrationEvent>
+    public class GracePeriodConfirmedIntegrationEventHandler : IHandleMessages<GracePeriodConfirmedIntegrationEvent>
     {
         private readonly IOrderRepository _orderRepository;
 
@@ -22,11 +22,12 @@ namespace Ordering.API.Application.IntegrationEvents.EventHandling
         /// <param name="event">       
         /// </param>
         /// <returns></returns>
-        public async Task Handle(GracePeriodConfirmedIntegrationEvent @event)
+        public async Task Handle(GracePeriodConfirmedIntegrationEvent message, IMessageHandlerContext context)
         {
-            var orderToUpdate = await _orderRepository.GetAsync(@event.OrderId);
+            var orderToUpdate = await _orderRepository.GetAsync(message.OrderId);
             orderToUpdate.SetAwaitingValidationStatus();
             await _orderRepository.UnitOfWork.SaveEntitiesAsync();
         }
+        
     }
 }

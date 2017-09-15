@@ -1,12 +1,13 @@
-﻿namespace Ordering.API.Application.IntegrationEvents.EventHandling
+﻿using NServiceBus;
+
+namespace Ordering.API.Application.IntegrationEvents.EventHandling
 {
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
     using System.Threading.Tasks;
     using Events;
     using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
 
     public class OrderStockConfirmedIntegrationEventHandler : 
-        IIntegrationEventHandler<OrderStockConfirmedIntegrationEvent>
+        IHandleMessages<OrderStockConfirmedIntegrationEvent>
     {
         private readonly IOrderRepository _orderRepository;
 
@@ -15,13 +16,13 @@
             _orderRepository = orderRepository;
         }
 
-        public async Task Handle(OrderStockConfirmedIntegrationEvent @event)
+        public async Task Handle(OrderStockConfirmedIntegrationEvent message, IMessageHandlerContext context)
         {
-            var orderToUpdate = await _orderRepository.GetAsync(@event.OrderId);
+            var orderToUpdate = await _orderRepository.GetAsync(message.OrderId);
 
             orderToUpdate.SetStockConfirmedStatus();
 
             await _orderRepository.UnitOfWork.SaveEntitiesAsync();
-        }
+        }        
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Ordering.API.Application.DomainEventHandlers.OrderPaid
+﻿using NServiceBus;
+
+namespace Ordering.API.Application.DomainEventHandlers.OrderPaid
 {
     using MediatR;
     using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
@@ -13,17 +15,17 @@
     public class OrderStatusChangedToPaidDomainEventHandler
                    : IAsyncNotificationHandler<OrderStatusChangedToPaidDomainEvent>
     {
+        private readonly IEndpointInstance _endpoint;
         private readonly IOrderRepository _orderRepository;
         private readonly ILoggerFactory _logger;
-        private readonly IOrderingIntegrationEventService _orderingIntegrationEventService;
 
         public OrderStatusChangedToPaidDomainEventHandler(
-            IOrderRepository orderRepository, ILoggerFactory logger,
-            IOrderingIntegrationEventService orderingIntegrationEventService)
+            IEndpointInstance endpoint,
+            IOrderRepository orderRepository, ILoggerFactory logger)
         {
+            _endpoint = endpoint;
             _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _orderingIntegrationEventService = orderingIntegrationEventService;
         }
 
         public async Task Handle(OrderStatusChangedToPaidDomainEvent orderStatusChangedToPaidDomainEvent)
@@ -37,7 +39,7 @@
 
             var orderStatusChangedToPaidIntegrationEvent = new OrderStatusChangedToPaidIntegrationEvent(orderStatusChangedToPaidDomainEvent.OrderId,
                 orderStockList);
-            await _orderingIntegrationEventService.PublishThroughEventBusAsync(orderStatusChangedToPaidIntegrationEvent);
+            await _endpoint.Publish(orderStatusChangedToPaidIntegrationEvent);
         }
     }  
 }
