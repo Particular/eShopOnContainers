@@ -6,7 +6,6 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.Eve
     using Infrastructure;
     using System.Collections.Generic;
     using System.Linq;
-    using global::Catalog.API.IntegrationEvents;
     using IntegrationEvents.Events;
 
     public class OrderStatusChangedToAwaitingValidationIntegrationEventHandler : 

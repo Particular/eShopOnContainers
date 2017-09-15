@@ -1,23 +1,16 @@
 ﻿using NServiceBus;
+using NServiceBus.Persistence.Sql;
 
 namespace Microsoft.eShopOnContainers.Services.Catalog.API
 {
     using Autofac;
     using Autofac.Extensions.DependencyInjection;
     using global::Catalog.API.Infrastructure.Filters;
-    using global::Catalog.API.IntegrationEvents;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
-    using Microsoft.Azure.ServiceBus;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
     using Microsoft.EntityFrameworkCore.Infrastructure;
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
-    using Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF;
-    using Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF.Services;
     using Microsoft.eShopOnContainers.Services.Catalog.API.Infrastructure;
     using Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.EventHandling;
     using Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.Events;
@@ -28,7 +21,6 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API
     using Microsoft.Extensions.Options;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Auth;
-    using Polly;
     using RabbitMQ.Client;
     using System;
     using System.Data.Common;
@@ -111,49 +103,6 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API
                     .AllowCredentials());
             });
 
-            services.AddTransient<Func<DbConnection, IIntegrationEventLogService>>(
-                sp => (DbConnection c) => new IntegrationEventLogService(c));
-
-            services.AddTransient<ICatalogIntegrationEventService, CatalogIntegrationEventService>();
-
-            if (Configuration.GetValue<bool>("AzureServiceBusEnabled"))
-            {
-                services.AddSingleton<IServiceBusPersisterConnection>(sp =>
-                {
-                    var settings = sp.GetRequiredService<IOptions<CatalogSettings>>().Value;
-                    var logger = sp.GetRequiredService<ILogger<DefaultServiceBusPersisterConnection>>();
-
-                    var serviceBusConnection = new ServiceBusConnectionStringBuilder(settings.EventBusConnection);
-
-                    return new DefaultServiceBusPersisterConnection(serviceBusConnection, logger);
-                });
-            }
-            else
-            {
-                services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
-                {
-                    var settings = sp.GetRequiredService<IOptions<CatalogSettings>>().Value;
-                    var logger = sp.GetRequiredService<ILogger<DefaultRabbitMQPersistentConnection>>();
-
-                    var factory = new ConnectionFactory()
-                    {
-                        HostName = Configuration["EventBusConnection"]
-                    };
-
-                    if (!string.IsNullOrEmpty(Configuration["EventBusUserName"]))
-                    {
-                        factory.UserName = Configuration["EventBusUserName"];
-                    }
-
-                    if (!string.IsNullOrEmpty(Configuration["EventBusPassword"]))
-                    {
-                        factory.Password = Configuration["EventBusPassword"];
-                    }
-
-                    return new DefaultRabbitMQPersistentConnection(factory, logger);
-                });
-            }
-
             RegisterEventBus(services);
 
             var container = new ContainerBuilder();
@@ -189,40 +138,7 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API
             var context = (CatalogContext)app
                         .ApplicationServices.GetService(typeof(CatalogContext));
 
-            WaitForSqlAvailabilityAsync(context, loggerFactory, app, env).Wait();
-
             ConfigureEventBus(app);
-
-            var integrationEventLogContext = new IntegrationEventLogContext(
-                new DbContextOptionsBuilder<IntegrationEventLogContext>()
-                .UseSqlServer(Configuration["ConnectionString"], b => b.MigrationsAssembly("Catalog.API"))
-                .Options);
-
-            integrationEventLogContext.Database.Migrate();
-        }
-
-        private async Task WaitForSqlAvailabilityAsync(CatalogContext ctx, ILoggerFactory loggerFactory, IApplicationBuilder app, IHostingEnvironment env, int retries = 0)
-        {
-            var logger = loggerFactory.CreateLogger(nameof(Startup));
-            var policy = CreatePolicy(retries, logger, nameof(WaitForSqlAvailabilityAsync));
-            await policy.ExecuteAsync(async () =>
-            {
-                await CatalogContextSeed.SeedAsync(app, env, loggerFactory);
-            });
-
-        }
-
-        private Policy CreatePolicy(int retries, ILogger logger, string prefix)
-        {
-            return Policy.Handle<SqlException>().
-                WaitAndRetryAsync(
-                    retryCount: retries,
-                    sleepDurationProvider: retry => TimeSpan.FromSeconds(5),
-                    onRetry: (exception, timeSpan, retry, ctx) =>
-                    {
-                        logger.LogTrace($"[{prefix}] Exception {exception.GetType().Name} with message ${exception.Message} detected on attempt {retry} of {retries}");
-                    }
-                );
         }
 
         private void RegisterEventBus(IServiceCollection services)
@@ -258,9 +174,9 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API
 
         protected virtual void ConfigureEventBus(IApplicationBuilder app)
         {
-            var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
-            eventBus.Subscribe<OrderStatusChangedToAwaitingValidationIntegrationEvent, OrderStatusChangedToAwaitingValidationIntegrationEventHandler>();
-            eventBus.Subscribe<OrderStatusChangedToPaidIntegrationEvent, OrderStatusChangedToPaidIntegrationEventHandler>();
+            //var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
+            //eventBus.Subscribe<OrderStatusChangedToAwaitingValidationIntegrationEvent, OrderStatusChangedToAwaitingValidationIntegrationEventHandler>();
+            //eventBus.Subscribe<OrderStatusChangedToPaidIntegrationEvent, OrderStatusChangedToPaidIntegrationEventHandler>();
         }
     }
 }
