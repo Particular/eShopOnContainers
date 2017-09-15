@@ -1,6 +1,7 @@
-﻿namespace Microsoft.eShopOnContainers.Services.Locations.API.Infrastructure.Services
+﻿using NServiceBus;
+
+namespace Microsoft.eShopOnContainers.Services.Locations.API.Infrastructure.Services
 {
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
     using Microsoft.eShopOnContainers.Services.Locations.API.Infrastructure.Exceptions;
     using Microsoft.eShopOnContainers.Services.Locations.API.Infrastructure.Repositories;
     using Microsoft.eShopOnContainers.Services.Locations.API.IntegrationEvents.Events;
@@ -12,13 +13,13 @@
 
     public class LocationsService : ILocationsService
     {
+        private readonly IEndpointInstance _endpoint;
         private readonly ILocationsRepository _locationsRepository;
-        private readonly IEventBus _eventBus;
 
-        public LocationsService(ILocationsRepository locationsRepository, IEventBus eventBus)
+        public LocationsService(ILocationsRepository locationsRepository, IEndpointInstance endpoint)
         {
+            _endpoint = endpoint;
             _locationsRepository = locationsRepository ?? throw new ArgumentNullException(nameof(locationsRepository));
-            _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
         }
 
         public async Task<Locations> GetLocation(int locationId)
@@ -66,7 +67,7 @@
         {
             var newUserLocations = MapUserLocationDetails(newLocations);
             var @event = new UserLocationUpdatedIntegrationEvent(userId, newUserLocations);
-            _eventBus.Publish(@event);
+            _endpoint.Publish(@event);
         }
 
         private List<UserLocationDetails> MapUserLocationDetails(List<Locations> newLocations)
