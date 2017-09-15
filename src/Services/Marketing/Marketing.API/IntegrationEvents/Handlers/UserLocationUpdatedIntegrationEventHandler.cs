@@ -1,15 +1,16 @@
-﻿namespace Microsoft.eShopOnContainers.Services.Marketing.API.IntegrationEvents.Handlers
+﻿using NServiceBus;
+
+namespace Microsoft.eShopOnContainers.Services.Marketing.API.IntegrationEvents.Handlers
 {
     using Marketing.API.IntegrationEvents.Events;
     using Marketing.API.Model;
-    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
     using Microsoft.eShopOnContainers.Services.Marketing.API.Infrastructure.Repositories;
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
     public class UserLocationUpdatedIntegrationEventHandler 
-        : IIntegrationEventHandler<UserLocationUpdatedIntegrationEvent>
+        : IHandleMessages<UserLocationUpdatedIntegrationEvent>
     {
         private readonly IMarketingDataRepository _marketingDataRepository;
 
@@ -18,13 +19,13 @@
             _marketingDataRepository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
-        public async Task Handle(UserLocationUpdatedIntegrationEvent @event)
+        public async Task Handle(UserLocationUpdatedIntegrationEvent message, IMessageHandlerContext context)
         {
-            var userMarketingData = await _marketingDataRepository.GetAsync(@event.UserId);
+            var userMarketingData = await _marketingDataRepository.GetAsync(message.UserId);
             userMarketingData = userMarketingData ?? 
-                new MarketingData() { UserId = @event.UserId };
+                new MarketingData() { UserId = message.UserId };
 
-            userMarketingData.Locations = MapUpdatedUserLocations(@event.LocationList);
+            userMarketingData.Locations = MapUpdatedUserLocations(message.LocationList);
             await _marketingDataRepository.UpdateLocationAsync(userMarketingData);
         }
 
