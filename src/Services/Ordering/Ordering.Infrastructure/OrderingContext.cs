@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
 {
     public class OrderingContext : DbContext, IUnitOfWork
-
     {
         public const string DEFAULT_SCHEMA = "ordering";
 
@@ -70,7 +69,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
 
             // After executing this line all the changes (from the Command Handler and Domain Event Handlers) 
             // performed throught the DbContext will be commited
-            var result = await SaveChangesAsync();
+            var result = await base.SaveChangesAsync();
 
             return true;
         }        

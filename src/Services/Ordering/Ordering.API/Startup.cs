@@ -33,6 +33,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.API
     using System.IdentityModel.Tokens.Jwt;
     using System.Reflection;
     using System.Threading.Tasks;
+    using Microsoft.eShopOnContainers.Services.Ordering.Infrastructure;
 
     public class Startup
     {
