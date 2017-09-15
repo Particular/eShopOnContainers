@@ -2,11 +2,11 @@
 using Basket.API.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
 using Microsoft.eShopOnContainers.Services.Basket.API.Model;
 using Microsoft.eShopOnContainers.Services.Basket.API.Services;
 using System;
 using System.Threading.Tasks;
+using NServiceBus;
 
 namespace Microsoft.eShopOnContainers.Services.Basket.API.Controllers
 {
@@ -16,15 +16,14 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API.Controllers
     {
         private readonly IBasketRepository _repository;
         private readonly IIdentityService _identitySvc;
-        private readonly IEventBus _eventBus;
+        private readonly IEndpointInstance _endpoint;
 
         public BasketController(IBasketRepository repository, 
-            IIdentityService identityService,
-            IEventBus eventBus)
+            IIdentityService identityService, IEndpointInstance endpoint)
         {
             _repository = repository;
             _identitySvc = identityService;
-            _eventBus = eventBus;
+            _endpoint = endpoint;
         }
         // GET /id
         [HttpGet("{id}")]
@@ -60,7 +59,7 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API.Controllers
             // Once basket is checkout, sends an integration event to
             // ordering.api to convert basket to order and proceeds with
             // order creation process
-            _eventBus.Publish(eventMessage);
+            await _endpoint.Publish(eventMessage);
 
             if (basket == null)
             {

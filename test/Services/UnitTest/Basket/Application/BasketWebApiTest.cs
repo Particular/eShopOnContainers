@@ -1,13 +1,13 @@
 ﻿using Basket.API.IntegrationEvents.Events;
 using Basket.API.Model;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
 using Microsoft.eShopOnContainers.Services.Basket.API.Controllers;
 using Microsoft.eShopOnContainers.Services.Basket.API.Model;
 using Moq;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using NServiceBus;
 using Xunit;
 using IBasketIdentityService = Microsoft.eShopOnContainers.Services.Basket.API.Services.IIdentityService;
 
@@ -17,13 +17,13 @@ namespace UnitTest.Basket.Application
     {
         private readonly Mock<IBasketRepository> _basketRepositoryMock;
         private readonly Mock<IBasketIdentityService> _identityServiceMock;
-        private readonly Mock<IEventBus> _serviceBusMock;
+        private readonly Mock<IEndpointInstance> _serviceBusMock;
 
         public BasketWebApiTest()
         {
             _basketRepositoryMock = new Mock<IBasketRepository>();
             _identityServiceMock = new Mock<IBasketIdentityService>();
-            _serviceBusMock = new Mock<IEventBus>();
+            _serviceBusMock = new Mock<IEndpointInstance>();
         }
 
         [Fact]
