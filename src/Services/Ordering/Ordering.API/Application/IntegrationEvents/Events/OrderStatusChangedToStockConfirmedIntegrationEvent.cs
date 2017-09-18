@@ -1,4 +1,4 @@
-﻿namespace Ordering.API.Application.IntegrationEvents.Events
+﻿namespace eShopOnContainers.Services.IntegrationEvents.Events
 {
     public class OrderStatusChangedToStockConfirmedIntegrationEvent
     {

@@ -1,9 +1,9 @@
-﻿using NServiceBus;
+﻿using eShopOnContainers.Services.IntegrationEvents.Events;
+using NServiceBus;
 
 namespace Ordering.API.Application.IntegrationEvents.EventHandling
 {
     using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
-    using Ordering.API.Application.IntegrationEvents.Events;
     using System.Threading.Tasks;
 
     public class OrderPaymentFailedIntegrationEventHandler : 

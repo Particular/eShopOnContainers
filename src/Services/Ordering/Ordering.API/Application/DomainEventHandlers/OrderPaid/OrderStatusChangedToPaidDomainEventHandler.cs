@@ -1,4 +1,5 @@
-﻿using NServiceBus;
+﻿using eShopOnContainers.Services.IntegrationEvents.Events;
+using NServiceBus;
 
 namespace Ordering.API.Application.DomainEventHandlers.OrderPaid
 {
@@ -10,7 +11,6 @@ namespace Ordering.API.Application.DomainEventHandlers.OrderPaid
     using System.Threading.Tasks;
     using Ordering.API.Application.IntegrationEvents;
     using System.Linq;
-    using Ordering.API.Application.IntegrationEvents.Events;
 
     public class OrderStatusChangedToPaidDomainEventHandler
                    : IAsyncNotificationHandler<OrderStatusChangedToPaidDomainEvent>

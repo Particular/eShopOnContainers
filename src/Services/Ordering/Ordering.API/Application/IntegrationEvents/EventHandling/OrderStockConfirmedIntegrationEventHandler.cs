@@ -1,9 +1,9 @@
-﻿using NServiceBus;
+﻿using eShopOnContainers.Services.IntegrationEvents.Events;
+using NServiceBus;
 
 namespace Ordering.API.Application.IntegrationEvents.EventHandling
 {
     using System.Threading.Tasks;
-    using Events;
     using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
 
     public class OrderStockConfirmedIntegrationEventHandler : 

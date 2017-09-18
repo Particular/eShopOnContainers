@@ -1,10 +1,10 @@
 ﻿using System;
 using MediatR;
 using System.Threading.Tasks;
+using eShopOnContainers.Services.IntegrationEvents.Events;
 using Microsoft.eShopOnContainers.Services.Ordering.API.Application.Commands;
 using Microsoft.Extensions.Logging;
 using NServiceBus;
-using Ordering.API.Application.IntegrationEvents.Events;
 
 namespace Ordering.API.Application.IntegrationEvents.EventHandling
 {

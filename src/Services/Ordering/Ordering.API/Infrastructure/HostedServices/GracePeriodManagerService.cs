@@ -1,4 +1,5 @@
-﻿using NServiceBus;
+﻿using eShopOnContainers.Services.IntegrationEvents.Events;
+using NServiceBus;
 
 namespace Ordering.API.Infrastructure.HostedServices
 {
@@ -6,7 +7,6 @@ namespace Ordering.API.Infrastructure.HostedServices
     using Microsoft.eShopOnContainers.Services.Ordering.API;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
-    using Ordering.API.Application.IntegrationEvents.Events;
     using System;
     using System.Collections.Generic;
     using System.Data.SqlClient;

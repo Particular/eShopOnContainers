@@ -7,7 +7,6 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.API
     using Autofac;
     using Autofac.Extensions.DependencyInjection;
     using global::Ordering.API.Application.IntegrationEvents;
-    using global::Ordering.API.Application.IntegrationEvents.Events;
     using global::Ordering.API.Infrastructure.Filters;
     using global::Ordering.API.Infrastructure.HostedServices;
     using Infrastructure;

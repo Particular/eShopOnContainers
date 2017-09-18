@@ -1,7 +1,7 @@
 ﻿using Ordering.API.Application.Models;
 using System;
 
-namespace Ordering.API.Application.IntegrationEvents.Events
+namespace eShopOnContainers.Services.IntegrationEvents.Events
 {
     public class UserCheckoutAcceptedIntegrationEvent
     {

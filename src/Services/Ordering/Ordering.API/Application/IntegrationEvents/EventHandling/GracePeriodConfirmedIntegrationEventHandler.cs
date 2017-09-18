@@ -1,6 +1,6 @@
 ﻿using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
-using Ordering.API.Application.IntegrationEvents.Events;
 using System.Threading.Tasks;
+using eShopOnContainers.Services.IntegrationEvents.Events;
 using NServiceBus;
 
 namespace Ordering.API.Application.IntegrationEvents.EventHandling

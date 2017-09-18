@@ -1,4 +1,5 @@
-﻿using NServiceBus;
+﻿using eShopOnContainers.Services.IntegrationEvents.Events;
+using NServiceBus;
 
 namespace Ordering.API.Application.DomainEventHandlers.OrderStockConfirmed
 {
@@ -9,7 +10,6 @@ namespace Ordering.API.Application.DomainEventHandlers.OrderStockConfirmed
     using System;
     using System.Threading.Tasks;
     using Ordering.API.Application.IntegrationEvents;
-    using Ordering.API.Application.IntegrationEvents.Events;
 
     public class OrderStatusChangedToStockConfirmedDomainEventHandler
                    : IAsyncNotificationHandler<OrderStatusChangedToStockConfirmedDomainEvent>
