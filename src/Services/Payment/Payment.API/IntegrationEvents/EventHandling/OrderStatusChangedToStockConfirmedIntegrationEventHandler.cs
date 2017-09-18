@@ -1,9 +1,9 @@
-﻿using NServiceBus;
+﻿using eShopOnContainers.Services.IntegrationEvents.Events;
+using NServiceBus;
 
 namespace Payment.API.IntegrationEvents.EventHandling
 {
     using Microsoft.Extensions.Options;
-    using Payment.API.IntegrationEvents.Events;
     using System.Threading.Tasks;
 
     public class OrderStatusChangedToStockConfirmedIntegrationEventHandler : 
