@@ -69,7 +69,7 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API
             {
                 var settings = sp.GetRequiredService<IOptions<BasketSettings>>().Value;
                 var configuration = ConfigurationOptions.Parse(settings.ConnectionString, true);           
-
+                
                 configuration.ResolveDns = true;
 
                 return ConnectionMultiplexer.Connect(configuration);
@@ -186,12 +186,12 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API
             // Configure RabbitMQ transport
             var transport = endpointConfiguration.UseTransport<RabbitMQTransport>();
             transport.UseConventionalRoutingTopology();
-            transport.ConnectionString("host=localhost"); // TODO: Pull this from config
+            transport.ConnectionString(GetRabbitConnectionString);
 
             // Configure SQL Server persistence
             var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
             persister.SqlDialect<SqlDialect.MsSqlServer>();
-            persister.ConnectionBuilder(() => new SqlConnection("")); // TODO: Get SQL working with this service! :)
+            persister.ConnectionBuilder(() => new SqlConnection(Configuration["ConnectionString"]));
 
             // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
             // You might want to turn this off in production, so that DevOps can use scripts to create these.
@@ -207,6 +207,18 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API
 
             services.AddTransient<ProductPriceChangedIntegrationEventHandler>();
             services.AddTransient<OrderStartedIntegrationEventHandler>();
+        }
+
+        private string GetRabbitConnectionString()
+        {
+            var host = Configuration["EventBusHost"];
+            var user = Configuration["EventBusUserName"];
+            var password = Configuration["EventBusPassword"];
+
+            if (string.IsNullOrEmpty(user))
+                return $"host={host}";
+
+            return $"host={host};username={user};password={password};";
         }
 
         private void ConfigureEventBus(IApplicationBuilder app)

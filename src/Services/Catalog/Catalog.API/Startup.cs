@@ -149,12 +149,12 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API
             // Configure RabbitMQ transport
             var transport = endpointConfiguration.UseTransport<RabbitMQTransport>();
             transport.UseConventionalRoutingTopology();
-            transport.ConnectionString("host=localhost"); // TODO: Pull this from config
+            transport.ConnectionString(GetRabbitConnectionString);
 
             // Configure SQL Server persistence
             var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
             persister.SqlDialect<SqlDialect.MsSqlServer>();
-            persister.ConnectionBuilder(() => new SqlConnection("")); // TODO: Get SQL working with this service! :)
+            persister.ConnectionBuilder(() => new SqlConnection(Configuration["ConnectionString"]));
 
             // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
             // You might want to turn this off in production, so that DevOps can use scripts to create these.
@@ -170,6 +170,18 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API
 
             services.AddTransient<OrderStatusChangedToAwaitingValidationIntegrationEventHandler>();
             services.AddTransient<OrderStatusChangedToPaidIntegrationEventHandler>();
+        }
+
+        private string GetRabbitConnectionString()
+        {
+            var host = Configuration["EventBusHost"];
+            var user = Configuration["EventBusUserName"];
+            var password = Configuration["EventBusPassword"];
+
+            if (string.IsNullOrEmpty(user))
+                return $"host={host}";
+
+            return $"host={host};username={user};password={password};";
         }
 
         protected virtual void ConfigureEventBus(IApplicationBuilder app)

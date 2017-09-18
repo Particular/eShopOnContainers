@@ -210,7 +210,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.API
             // Configure RabbitMQ transport
             var transport = endpointConfiguration.UseTransport<RabbitMQTransport>();
             transport.UseConventionalRoutingTopology();
-            transport.ConnectionString("host=localhost"); // TODO: Pull this from config
+            transport.ConnectionString(GetRabbitConnectionString);
 
             // Configure SQL Server persistence
             var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
@@ -230,6 +230,18 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.API
             // Start the endpoint and register it with ASP.NET Core DI
             var endpoint = Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
             services.AddSingleton<IEndpointInstance>(endpoint);
+        }
+
+        private string GetRabbitConnectionString()
+        {
+            var host = Configuration["EventBusHost"];
+            var user = Configuration["EventBusUserName"];
+            var password = Configuration["EventBusPassword"];
+
+            if (string.IsNullOrEmpty(user))
+                return $"host={host}";
+
+            return $"host={host};username={user};password={password};";
         }
 
         private async Task WaitForSqlAvailabilityAsync(ILoggerFactory loggerFactory, IApplicationBuilder app, IHostingEnvironment env, int retries = 0)
