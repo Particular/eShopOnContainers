@@ -1,10 +1,10 @@
-﻿using NServiceBus;
+﻿using eShopOnContainers.Services.IntegrationEvents.Events;
+using NServiceBus;
 
 namespace Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.EventHandling
 {
     using System.Threading.Tasks;
     using Infrastructure;
-    using Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.Events;
 
     public class OrderStatusChangedToPaidIntegrationEventHandler : 
         IHandleMessages<OrderStatusChangedToPaidIntegrationEvent>

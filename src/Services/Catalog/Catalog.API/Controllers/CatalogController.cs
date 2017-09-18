@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.eShopOnContainers.Services.Catalog.API.Infrastructure;
-using Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.Events;
 using Microsoft.eShopOnContainers.Services.Catalog.API.Model;
 using Microsoft.eShopOnContainers.Services.Catalog.API.ViewModel;
 using Microsoft.Extensions.Options;
@@ -9,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using eShopOnContainers.Services.IntegrationEvents.Events;
 using NServiceBus;
 
 namespace Microsoft.eShopOnContainers.Services.Catalog.API.Controllers

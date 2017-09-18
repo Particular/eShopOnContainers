@@ -1,4 +1,5 @@
-﻿using NServiceBus;
+﻿using eShopOnContainers.Services.IntegrationEvents.Events;
+using NServiceBus;
 
 namespace Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.EventHandling
 {
@@ -6,7 +7,6 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.Eve
     using Infrastructure;
     using System.Collections.Generic;
     using System.Linq;
-    using IntegrationEvents.Events;
 
     public class OrderStatusChangedToAwaitingValidationIntegrationEventHandler : 
         IHandleMessages<OrderStatusChangedToAwaitingValidationIntegrationEvent>

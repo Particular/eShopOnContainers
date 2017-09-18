@@ -13,7 +13,6 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API
     using Microsoft.EntityFrameworkCore.Infrastructure;
     using Microsoft.eShopOnContainers.Services.Catalog.API.Infrastructure;
     using Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.EventHandling;
-    using Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.Events;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.HealthChecks;
