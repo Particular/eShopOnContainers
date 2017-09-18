@@ -1,8 +1,8 @@
-﻿using NServiceBus;
+﻿using eShopOnContainers.Services.IntegrationEvents.Events;
+using NServiceBus;
 
 namespace Microsoft.eShopOnContainers.Services.Marketing.API.IntegrationEvents.Handlers
 {
-    using Marketing.API.IntegrationEvents.Events;
     using Marketing.API.Model;
     using Microsoft.eShopOnContainers.Services.Marketing.API.Infrastructure.Repositories;
     using System;
