@@ -17,7 +17,6 @@ namespace Microsoft.eShopOnContainers.Services.Marketing.API
     using Infrastructure.Filters;
     using Infrastructure.Repositories;
     using Infrastructure.Services;
-    using IntegrationEvents.Events;
     using Marketing.API.IntegrationEvents.Handlers;
     using Microsoft.EntityFrameworkCore.Diagnostics;
     using RabbitMQ.Client;
