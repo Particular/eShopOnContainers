@@ -11,6 +11,7 @@ services:
       - basket.data
       - identity.api
       - rabbitmq
+      - sql.data
 
   catalog.api:
     image: eshop/catalog.api:${TAG:-latest}
@@ -85,7 +86,8 @@ services:
       context: ./src/Services/Payment/Payment.API
       dockerfile: Dockerfile
     depends_on:
-      - rabbitmq    
+      - rabbitmq
+      - sql.data
     
   locations.api:
     image: eshop/locations.api:${TAG:-latest}
@@ -95,6 +97,7 @@ services:
     depends_on:
       - nosql.data
       - rabbitmq
+      - sql.data
 
   sql.data:
     image: microsoft/mssql-server-linux:latest
