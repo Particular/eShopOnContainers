@@ -1,8 +1,8 @@
-﻿using Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.Events;
-using Microsoft.eShopOnContainers.Services.Basket.API.Model;
+﻿using Microsoft.eShopOnContainers.Services.Basket.API.Model;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using eShopOnContainers.Services.IntegrationEvents.Events;
 using NServiceBus;
 
 namespace Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.EventHandling

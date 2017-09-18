@@ -1,7 +1,7 @@
-﻿using Basket.API.IntegrationEvents.Events;
-using Microsoft.eShopOnContainers.Services.Basket.API.Model;
+﻿using Microsoft.eShopOnContainers.Services.Basket.API.Model;
 using System;
 using System.Threading.Tasks;
+using eShopOnContainers.Services.IntegrationEvents.Events;
 using NServiceBus;
 
 namespace Basket.API.IntegrationEvents.EventHandling

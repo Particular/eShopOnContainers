@@ -2,13 +2,11 @@
 using Autofac.Extensions.DependencyInjection;
 using Basket.API.Infrastructure.Filters;
 using Basket.API.IntegrationEvents.EventHandling;
-using Basket.API.IntegrationEvents.Events;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.EventHandling;
-using Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.Events;
 using Microsoft.eShopOnContainers.Services.Basket.API.Model;
 using Microsoft.eShopOnContainers.Services.Basket.API.Services;
 using Microsoft.Extensions.Configuration;

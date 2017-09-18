@@ -81,8 +81,6 @@ namespace Payment.API
             transport.UseConventionalRoutingTopology();
             transport.ConnectionString(GetRabbitConnectionString);
 
-            string rabbitHost = Configuration["EventBusConnection"];
-
             // Configure SQL Server persistence
             var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
             persister.SqlDialect<SqlDialect.MsSqlServer>();
