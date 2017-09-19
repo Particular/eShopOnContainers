@@ -10,13 +10,11 @@ namespace Ordering.API.Application.IntegrationEvents.EventHandling
 {
     public class UserCheckoutAcceptedIntegrationEventHandler : IHandleMessages<UserCheckoutAcceptedIntegrationEvent>
     {
-        private readonly IEndpointInstance _endpoint;
         private readonly IMediator _mediator;
         private readonly ILoggerFactory _logger;
 
-        public UserCheckoutAcceptedIntegrationEventHandler(IEndpointInstance endpoint,IMediator mediator, ILoggerFactory logger)
+        public UserCheckoutAcceptedIntegrationEventHandler(IMediator mediator, ILoggerFactory logger)
         {
-            _endpoint = endpoint;
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -24,11 +22,12 @@ namespace Ordering.API.Application.IntegrationEvents.EventHandling
         /// <summary>
         /// Integration event handler which starts the create order process
         /// </summary>
-        /// <param name="eventMsg">
+        /// <param name="message">
         /// Integration event message which is sent by the
         /// basket.api once it has successfully process the 
         /// order items.
         /// </param>
+        /// <param name="context"></param>
         /// <returns></returns>
         public async Task Handle(UserCheckoutAcceptedIntegrationEvent message, IMessageHandlerContext context)
         {
@@ -36,7 +35,7 @@ namespace Ordering.API.Application.IntegrationEvents.EventHandling
 
             // Send Integration event to clean basket once basket is converted to Order and before starting with the order creation process
             var orderStartedIntegrationEvent = new OrderStartedIntegrationEvent(message.UserId);
-            await _endpoint.Publish(orderStartedIntegrationEvent);
+            await context.Publish(orderStartedIntegrationEvent);
 
             if (message.RequestId != Guid.Empty)
             {

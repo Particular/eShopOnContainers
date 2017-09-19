@@ -175,12 +175,12 @@ namespace Microsoft.eShopOnContainers.Services.Marketing.API
         private void RegisterEventBus(IServiceCollection services)
         {
             // NServiceBus
-            var endpointConfiguration = new EndpointConfiguration("Basket");
+            var endpointConfiguration = new EndpointConfiguration("Marketing");
 
             // Configure RabbitMQ transport
             var transport = endpointConfiguration.UseTransport<RabbitMQTransport>();
             transport.UseConventionalRoutingTopology();
-            transport.ConnectionString(GetRabbitConnectionString);
+            transport.ConnectionString(GetRabbitConnectionString());
 
             // Configure SQL Server persistence
             var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
@@ -205,7 +205,7 @@ namespace Microsoft.eShopOnContainers.Services.Marketing.API
 
         private string GetRabbitConnectionString()
         {
-            var host = Configuration["EventBusHost"];
+            var host = Configuration["EventBusConnection"];
             var user = Configuration["EventBusUserName"];
             var password = Configuration["EventBusPassword"];
 
