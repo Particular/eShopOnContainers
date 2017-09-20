@@ -11,18 +11,18 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.HealthChecks;
 using Microsoft.Extensions.Logging;
-using RabbitMQ.Client;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
 using NServiceBus;
-using NServiceBus.Persistence.Sql;
+using Polly;
 
 namespace Microsoft.eShopOnContainers.Services.Locations.API
 {
+    using System.Data.SqlClient;
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -121,8 +121,7 @@ namespace Microsoft.eShopOnContainers.Services.Locations.API
                   c.ConfigureOAuth2("locationsswaggerui", "", "", "Locations Swagger UI");
               });
 
-            LocationsContextSeed.SeedAsync(app, loggerFactory)
-                .Wait();
+            WaitForSqlAvailabilityAsync(loggerFactory, app).Wait();
         }
 
         private void ConfigureAuthService(IServiceCollection services)
@@ -155,9 +154,7 @@ namespace Microsoft.eShopOnContainers.Services.Locations.API
             transport.ConnectionString(GetRabbitConnectionString());
 
             // Configure SQL Server persistence
-            var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
-            persister.SqlDialect<SqlDialect.MsSqlServer>();
-            persister.ConnectionBuilder(() => new SqlConnection(Configuration["ConnectionString"]));
+            endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
             // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
             // You might want to turn this off in production, so that DevOps can use scripts to create these.
@@ -182,6 +179,30 @@ namespace Microsoft.eShopOnContainers.Services.Locations.API
                 return $"host={host}";
 
             return $"host={host};username={user};password={password};";
+        }
+
+        private async Task WaitForSqlAvailabilityAsync(ILoggerFactory loggerFactory, IApplicationBuilder app, int retries = 0)
+        {
+            var logger = loggerFactory.CreateLogger(nameof(Startup));
+            var policy = CreatePolicy(retries, logger, nameof(WaitForSqlAvailabilityAsync));
+            await policy.ExecuteAsync(async () =>
+            {
+                await LocationsContextSeed.SeedAsync(app, loggerFactory);
+            });
+
+        }
+
+        private Policy CreatePolicy(int retries, ILogger logger, string prefix)
+        {
+            return Policy.Handle<SqlException>().
+                WaitAndRetryAsync(
+                    retryCount: retries,
+                    sleepDurationProvider: retry => TimeSpan.FromSeconds(5),
+                    onRetry: (exception, timeSpan, retry, ctx) =>
+                    {
+                        logger.LogTrace($"[{prefix}] Exception {exception.GetType().Name} with message ${exception.Message} detected on attempt {retry} of {retries}");
+                    }
+                );
         }
     }
 }

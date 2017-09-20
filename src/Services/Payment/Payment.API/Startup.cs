@@ -4,13 +4,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Payment.API.IntegrationEvents.EventHandling;
-using RabbitMQ.Client;
 using System;
-using System.Data.SqlClient;
 using NServiceBus;
-using NServiceBus.Persistence.Sql;
 
 namespace Payment.API
 {
@@ -81,9 +76,7 @@ namespace Payment.API
             transport.ConnectionString(GetRabbitConnectionString());
 
             // Configure SQL Server persistence
-            var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
-            persister.SqlDialect<SqlDialect.MsSqlServer>();
-            persister.ConnectionBuilder(() => new SqlConnection(Configuration["ConnectionString"])); 
+            endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
             // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
             // You might want to turn this off in production, so that DevOps can use scripts to create these.

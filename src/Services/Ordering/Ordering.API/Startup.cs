@@ -1,12 +1,8 @@
-﻿using NServiceBus;
-using NServiceBus.Persistence.Sql;
-
-namespace Microsoft.eShopOnContainers.Services.Ordering.API
+﻿namespace Microsoft.eShopOnContainers.Services.Ordering.API
 {
     using AspNetCore.Http;
     using Autofac;
     using Autofac.Extensions.DependencyInjection;
-    using global::Ordering.API.Application.IntegrationEvents;
     using global::Ordering.API.Infrastructure.Filters;
     using global::Ordering.API.Infrastructure.HostedServices;
     using Infrastructure;
@@ -22,12 +18,11 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.API
     using Microsoft.Extensions.HealthChecks;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
+    using NServiceBus;
     using Polly;
-    using RabbitMQ.Client;
     using Swashbuckle.AspNetCore.Swagger;
     using System;
     using System.Collections.Generic;
-    using System.Data.Common;
     using System.Data.SqlClient;
     using System.IdentityModel.Tokens.Jwt;
     using System.Reflection;
@@ -212,9 +207,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.API
             transport.ConnectionString(GetRabbitConnectionString());
 
             // Configure SQL Server persistence
-            var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
-            persister.SqlDialect<SqlDialect.MsSqlServer>();
-            persister.ConnectionBuilder(() => new SqlConnection(Configuration["ConnectionString"]));
+            endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
             endpointConfiguration.EnableOutbox();
 

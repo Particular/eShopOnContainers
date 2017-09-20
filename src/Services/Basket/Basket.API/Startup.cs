@@ -17,11 +17,9 @@ using StackExchange.Redis;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
 using NServiceBus;
-using NServiceBus.Persistence.Sql;
 
 namespace Microsoft.eShopOnContainers.Services.Basket.API
 {
@@ -187,9 +185,7 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API
             transport.ConnectionString(GetRabbitConnectionString());
 
             // Configure SQL Server persistence
-            var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
-            persister.SqlDialect<SqlDialect.MsSqlServer>();
-            persister.ConnectionBuilder(() => new SqlConnection(Configuration["ConnectionString"]));
+            endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
             // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
             // You might want to turn this off in production, so that DevOps can use scripts to create these.

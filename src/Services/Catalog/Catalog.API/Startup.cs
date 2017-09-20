@@ -1,7 +1,4 @@
-﻿using NServiceBus;
-using NServiceBus.Persistence.Sql;
-
-namespace Microsoft.eShopOnContainers.Services.Catalog.API
+﻿namespace Microsoft.eShopOnContainers.Services.Catalog.API
 {
     using Autofac;
     using Autofac.Extensions.DependencyInjection;
@@ -10,22 +7,18 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
-    using Microsoft.EntityFrameworkCore.Infrastructure;
     using Microsoft.eShopOnContainers.Services.Catalog.API.Infrastructure;
     using Microsoft.eShopOnContainers.Services.Catalog.API.IntegrationEvents.EventHandling;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.HealthChecks;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.Options;
-    using Microsoft.WindowsAzure.Storage;
-    using Microsoft.WindowsAzure.Storage.Auth;
-    using RabbitMQ.Client;
+    using NServiceBus;
     using System;
-    using System.Data.Common;
     using System.Data.SqlClient;
     using System.Reflection;
     using System.Threading.Tasks;
+    using Polly;
 
     public class Startup
     {
@@ -134,8 +127,7 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API
                   c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
               });
 
-            var context = (CatalogContext)app
-                        .ApplicationServices.GetService(typeof(CatalogContext));
+            WaitForSqlAvailabilityAsync(loggerFactory, app, env).Wait();
 
             ConfigureEventBus(app);
         }
@@ -151,9 +143,7 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API
             transport.ConnectionString(GetRabbitConnectionString());
 
             // Configure SQL Server persistence
-            var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
-            persister.SqlDialect<SqlDialect.MsSqlServer>();
-            persister.ConnectionBuilder(() => new SqlConnection(Configuration["ConnectionString"]));
+            endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
             // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
             // You might want to turn this off in production, so that DevOps can use scripts to create these.
@@ -188,6 +178,30 @@ namespace Microsoft.eShopOnContainers.Services.Catalog.API
             //var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
             //eventBus.Subscribe<OrderStatusChangedToAwaitingValidationIntegrationEvent, OrderStatusChangedToAwaitingValidationIntegrationEventHandler>();
             //eventBus.Subscribe<OrderStatusChangedToPaidIntegrationEvent, OrderStatusChangedToPaidIntegrationEventHandler>();
+        }
+
+        private async Task WaitForSqlAvailabilityAsync(ILoggerFactory loggerFactory, IApplicationBuilder app, IHostingEnvironment env, int retries = 0)
+        {
+            var logger = loggerFactory.CreateLogger(nameof(Startup));
+            var policy = CreatePolicy(retries, logger, nameof(WaitForSqlAvailabilityAsync));
+            await policy.ExecuteAsync(async () =>
+            {
+                await CatalogContextSeed.SeedAsync(app, env, loggerFactory);
+            });
+
+        }
+
+        private Policy CreatePolicy(int retries, ILogger logger, string prefix)
+        {
+            return Policy.Handle<SqlException>().
+                WaitAndRetryAsync(
+                    retryCount: retries,
+                    sleepDurationProvider: retry => TimeSpan.FromSeconds(5),
+                    onRetry: (exception, timeSpan, retry, ctx) =>
+                    {
+                        logger.LogTrace($"[{prefix}] Exception {exception.GetType().Name} with message ${exception.Message} detected on attempt {retry} of {retries}");
+                    }
+                );
         }
     }
 }

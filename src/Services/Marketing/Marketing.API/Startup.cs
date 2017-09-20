@@ -1,7 +1,4 @@
-﻿using NServiceBus;
-using NServiceBus.Persistence.Sql;
-
-namespace Microsoft.eShopOnContainers.Services.Marketing.API
+﻿namespace Microsoft.eShopOnContainers.Services.Marketing.API
 {
     using AspNetCore.Builder;
     using AspNetCore.Hosting;
@@ -19,7 +16,7 @@ namespace Microsoft.eShopOnContainers.Services.Marketing.API
     using Infrastructure.Services;
     using Marketing.API.IntegrationEvents.Handlers;
     using Microsoft.EntityFrameworkCore.Diagnostics;
-    using RabbitMQ.Client;
+    using NServiceBus;
     using Swashbuckle.AspNetCore.Swagger;
     using System;
     using System.Collections.Generic;
@@ -27,6 +24,7 @@ namespace Microsoft.eShopOnContainers.Services.Marketing.API
     using System.IdentityModel.Tokens.Jwt;
     using System.Reflection;
     using System.Threading.Tasks;
+    using Polly;
 
     public class Startup
     {
@@ -152,8 +150,7 @@ namespace Microsoft.eShopOnContainers.Services.Marketing.API
                    c.ConfigureOAuth2("marketingswaggerui", "", "", "Marketing Swagger UI");
                });
 
-            var context = (MarketingContext)app
-                        .ApplicationServices.GetService(typeof(MarketingContext));
+            WaitForSqlAvailabilityAsync(loggerFactory, app).Wait();
 
             ConfigureEventBus(app);
         }
@@ -183,9 +180,7 @@ namespace Microsoft.eShopOnContainers.Services.Marketing.API
             transport.ConnectionString(GetRabbitConnectionString());
 
             // Configure SQL Server persistence
-            var persister = endpointConfiguration.UsePersistence<SqlPersistence>();
-            persister.SqlDialect<SqlDialect.MsSqlServer>();
-            persister.ConnectionBuilder(() => new SqlConnection(Configuration["ConnectionString"]));
+            endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
             // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
             // You might want to turn this off in production, so that DevOps can use scripts to create these.
@@ -224,6 +219,30 @@ namespace Microsoft.eShopOnContainers.Services.Marketing.API
         protected virtual void ConfigureAuth(IApplicationBuilder app)
         {
             app.UseAuthentication();
+        }
+
+        private async Task WaitForSqlAvailabilityAsync(ILoggerFactory loggerFactory, IApplicationBuilder app, int retries = 0)
+        {
+            var logger = loggerFactory.CreateLogger(nameof(Startup));
+            var policy = CreatePolicy(retries, logger, nameof(WaitForSqlAvailabilityAsync));
+            await policy.ExecuteAsync(async () =>
+            {
+                await MarketingContextSeed.SeedAsync(app, loggerFactory);
+            });
+
+        }
+
+        private Policy CreatePolicy(int retries, ILogger logger, string prefix)
+        {
+            return Policy.Handle<SqlException>().
+                WaitAndRetryAsync(
+                    retryCount: retries,
+                    sleepDurationProvider: retry => TimeSpan.FromSeconds(5),
+                    onRetry: (exception, timeSpan, retry, ctx) =>
+                    {
+                        logger.LogTrace($"[{prefix}] Exception {exception.GetType().Name} with message ${exception.Message} detected on attempt {retry} of {retries}");
+                    }
+                );
         }
     }
 }
