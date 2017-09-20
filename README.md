@@ -77,4 +77,4 @@ TODO: include routing definition code here
 
 Some of the NServiceBus features, e.g. Outbox, require persistance storage. In this sample we use SQL persistence running on top of MS SQL Server databases.
 
-In a dev/test environments you can rely on built-in installers to automatically create databases and tables. However, in production you should use generated scripts and follow the workflow similar to the one described in our documentation.
+In a dev/test environments you can rely on built-in installers to automatically create databases and tables. However, in production you should use generated scripts and follow the workflow similar to the one described in the [Installer Workflow](https://docs.particular.net/persistence/sql/installer-workflow) article.
