@@ -53,7 +53,7 @@ TODO: include snippet here from the app to show how it's done
 
 To ensure that applications are maintainable and easy to evolve, follow those recommendations when designing messages:
 
-- **Keep message definitions as small as possible** - If your message has dozens of properties it may be an indicate that your services are implicitly coupled. Ideally, the messages exchanged between services should contains just a few properties, mainly Ids. See [the put your events on a diet blog post]() and [presentation]() to learn more.
+- **Keep message definitions as small as possible** - If your message has dozens of properties it may be an indicate that your services are implicitly coupled. Ideally, the messages exchanged between services should contains just a few properties, mainly Ids. See [the put your events on a diet blog post](https://particular.net/blog/putting-your-events-on-a-diet) and [presentation](https://skillsmatter.com/skillscasts/2990-events-diet) to learn more.
 - **Avoid dependencies in message definitions** - Be careful to not rely on 3-rd party frameworks like EntityFramework or internal services data models. Even if ultimately the message will be a copy of another model class, it's better to duplicate, as it'll be easier to modify it in the future.
 - ...
 
