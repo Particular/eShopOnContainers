@@ -46,7 +46,7 @@ namespace Ordering.API.Application.IntegrationEvents.EventHandling
 
                 var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, bool>(createOrderCommand, message.RequestId);
                 result = await _mediator.Send(requestCreateOrder);
-            }            
+            }
 
             _logger.CreateLogger(nameof(UserCheckoutAcceptedIntegrationEventHandler))
                 .LogTrace(result ? $"UserCheckoutAccepted integration event has been received and a create new order process is started with requestId: {message.RequestId}" : 

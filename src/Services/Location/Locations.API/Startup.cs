@@ -48,8 +48,6 @@ namespace Microsoft.eShopOnContainers.Services.Locations.API
                 checks.AddValueTaskCheck("HTTP Endpoint", () => new ValueTask<IHealthCheckResult>(HealthCheckResult.Healthy("Ok")));
             });
 
-            RegisterEventBus(services);
-
             // Add framework services.
             services.AddSwaggerGen(options =>
             {
@@ -93,10 +91,14 @@ namespace Microsoft.eShopOnContainers.Services.Locations.API
             services.AddTransient<ILocationsRepository, LocationsRepository>();
 
             //configure autofac
-            var container = new ContainerBuilder();
-            container.Populate(services);
+            var containerBuilder = new ContainerBuilder();
 
-            return new AutofacServiceProvider(container.Build());
+            containerBuilder.Populate(services);
+
+            // NServiceBus
+            var container = RegisterEventBus(containerBuilder);
+
+            return new AutofacServiceProvider(container);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -143,9 +145,15 @@ namespace Microsoft.eShopOnContainers.Services.Locations.API
             app.UseAuthentication();
         }
 
-        private void RegisterEventBus(IServiceCollection services)
+        private IContainer RegisterEventBus(ContainerBuilder containerBuilder)
         {
-            // NServiceBus
+            IEndpointInstance endpoint = null;
+            containerBuilder.Register(c => endpoint)
+                .As<IEndpointInstance>()
+                .SingleInstance();
+
+            var container = containerBuilder.Build();
+
             var endpointConfiguration = new EndpointConfiguration("Location");
 
             // Configure RabbitMQ transport
@@ -153,8 +161,11 @@ namespace Microsoft.eShopOnContainers.Services.Locations.API
             transport.UseConventionalRoutingTopology();
             transport.ConnectionString(GetRabbitConnectionString());
 
-            // Configure SQL Server persistence
+            // Configure persistence
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
+
+            // Enable the Outbox.
+            endpointConfiguration.EnableOutbox();
 
             // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
             // You might want to turn this off in production, so that DevOps can use scripts to create these.
@@ -163,10 +174,17 @@ namespace Microsoft.eShopOnContainers.Services.Locations.API
             // Define conventions
             var conventions = endpointConfiguration.Conventions();
             conventions.DefiningEventsAs(c => c.Namespace != null && c.Name.EndsWith("IntegrationEvent"));
+            
+            // Configure the DI container.
+            endpointConfiguration.UseContainer<AutofacBuilder>(customizations: customizations =>
+            {
+                customizations.ExistingLifetimeScope(container);
+            });
 
             // Start the endpoint and register it with ASP.NET Core DI
-            var endpoint = Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
-            services.AddSingleton<IEndpointInstance>(endpoint);
+            endpoint = Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
+
+            return container;
         }
 
         private string GetRabbitConnectionString()

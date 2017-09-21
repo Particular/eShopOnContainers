@@ -23,6 +23,7 @@
     <PackageReference Include="MongoDB.Bson" Version="2.4.4" />
     <PackageReference Include="MongoDB.Driver" Version="2.4.4" />
     <PackageReference Include="MongoDB.Driver.Core" Version="2.4.4" />
+    <PackageReference Include="NServiceBus.Autofac" Version="7.0.0-beta0001" />
     <PackageReference Include="NServiceBus.RabbitMQ" Version="5.0.0-beta30-0009" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="1.0.0" />
     <PackageReference Include="Polly" Version="5.3.1" />

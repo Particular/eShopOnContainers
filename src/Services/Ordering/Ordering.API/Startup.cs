@@ -114,21 +114,23 @@
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<IIdentityService, IdentityService>();
 
-            RegisterEventBus(services);
             ConfigureAuthService(services);
             services.AddOptions();
 
             //configure autofac
 
-            var container = new ContainerBuilder();
-            container.Populate(services);
+            var containerBuilder = new ContainerBuilder();
 
-            container.RegisterModule(new MediatorModule());
-            container.RegisterModule(new ApplicationModule(Configuration["ConnectionString"]));
+            containerBuilder.Populate(services);
 
-            return new AutofacServiceProvider(container.Build());
+            containerBuilder.RegisterModule(new MediatorModule());
+            containerBuilder.RegisterModule(new ApplicationModule(Configuration["ConnectionString"]));
+
+            // NServiceBus
+            var container = RegisterEventBus(containerBuilder);
+
+            return new AutofacServiceProvider(container);
         }
-
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
@@ -140,7 +142,7 @@
             {
                 loggerFactory.CreateLogger("init").LogDebug($"Using PATH BASE '{pathBase}'");
                 app.UsePathBase(pathBase);
-            }            
+            }
 
             app.UseCors("CorsPolicy");
 
@@ -148,27 +150,13 @@
             app.UseMvcWithDefaultRoute();
 
             app.UseSwagger()
-               .UseSwaggerUI(c =>
-               {
-                   c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-                   c.ConfigureOAuth2("orderingswaggerui", "", "", "Ordering Swagger UI");
-               });
+                .UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                    c.ConfigureOAuth2("orderingswaggerui", "", "", "Ordering Swagger UI");
+                });
 
             WaitForSqlAvailabilityAsync(loggerFactory, app, env).Wait();
-
-            ConfigureEventBus(app);
-        }
-
-        private void ConfigureEventBus(IApplicationBuilder app)
-        {
-            //var eventBus = app.ApplicationServices.GetRequiredService<BuildingBlocks.EventBus.Abstractions.IEventBus>();
-
-            //eventBus.Subscribe<UserCheckoutAcceptedIntegrationEvent, IIntegrationEventHandler<UserCheckoutAcceptedIntegrationEvent>>();
-            //eventBus.Subscribe<GracePeriodConfirmedIntegrationEvent, IIntegrationEventHandler<GracePeriodConfirmedIntegrationEvent>>();
-            //eventBus.Subscribe<OrderStockConfirmedIntegrationEvent, IIntegrationEventHandler<OrderStockConfirmedIntegrationEvent>>();
-            //eventBus.Subscribe<OrderStockRejectedIntegrationEvent, IIntegrationEventHandler<OrderStockRejectedIntegrationEvent>>();
-            //eventBus.Subscribe<OrderPaymentFailedIntegrationEvent, IIntegrationEventHandler<OrderPaymentFailedIntegrationEvent>>();
-            //eventBus.Subscribe<OrderPaymentSuccededIntegrationEvent, IIntegrationEventHandler<OrderPaymentSuccededIntegrationEvent>>();
         }
 
         private void ConfigureAuthService(IServiceCollection services)
@@ -196,9 +184,15 @@
             app.UseAuthentication();
         }
 
-        private void RegisterEventBus(IServiceCollection services)
+        IContainer RegisterEventBus(ContainerBuilder containerBuilder)
         {
-            // NServiceBus
+            IEndpointInstance endpoint = null;
+            containerBuilder.Register(c => endpoint)
+                .As<IEndpointInstance>()
+                .SingleInstance();
+
+            var container = containerBuilder.Build();
+
             var endpointConfiguration = new EndpointConfiguration("Ordering");
 
             // Configure RabbitMQ transport
@@ -206,9 +200,10 @@
             transport.UseConventionalRoutingTopology();
             transport.ConnectionString(GetRabbitConnectionString());
 
-            // Configure SQL Server persistence
+            // Configure persistence
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
+            // Enable the Outbox.
             endpointConfiguration.EnableOutbox();
 
             // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
@@ -219,9 +214,15 @@
             var conventions = endpointConfiguration.Conventions();
             conventions.DefiningEventsAs(c => c.Namespace != null && c.Name.EndsWith("IntegrationEvent"));
 
-            // Start the endpoint and register it with ASP.NET Core DI
-            var endpoint = Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
-            services.AddSingleton<IEndpointInstance>(endpoint);
+            // Configure the DI container.
+            endpointConfiguration.UseContainer<AutofacBuilder>(customizations: customizations =>
+            {
+                customizations.ExistingLifetimeScope(container);
+            });
+
+            endpoint = Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
+
+            return container;
         }
 
         private string GetRabbitConnectionString()
