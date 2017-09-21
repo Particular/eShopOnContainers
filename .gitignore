@@ -34,6 +34,8 @@ installer/[F|f]iles
 installer/[C|c]ustom[A|a]ctions
 installer/ServiceControl-cache
 
+ParticularSoftware/
+
 # Created by https://www.gitignore.io
 
 ### VisualStudio ###
@@ -324,3 +326,4 @@ pub/
 .idea/
 *.sln.iml
 >>>>>>> 1d1f100... Sync with RepoStandards
+/src/Services/Payment/Payment.API/ParticularSoftware
