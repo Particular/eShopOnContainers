@@ -13,8 +13,11 @@ If you want to learn more about microservices/SOA architecture, domain modeling 
 
 ## Recommended resources
 
+For a deep dive into SOA/microservices architecture and useful patterns, check out the following resources:
+
 - [Selected videos](http://go.particular.net/ADSD-eShopOnContainers) from Udi Dahan's Advanced Distributed Systems Design course about service design
 - [Put your events on a diet](https://skillsmatter.com/skillscasts/2990-events-diet) Andreas Ohlund's presentation and the related [blog post](https://particular.net/blog/putting-your-events-on-a-diet)
+- [The secret of better UI composition](https://particular.net/blog/secret-of-better-ui-composition) blog post
 
 
 ## NServiceBus overview
