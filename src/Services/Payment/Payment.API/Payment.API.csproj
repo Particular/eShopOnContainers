@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0" />
+    <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.0.0-beta0001" />
     <PackageReference Include="NServiceBus.Autofac" Version="7.0.0-beta0001" />
     <PackageReference Include="NServiceBus.RabbitMQ" Version="5.0.0-beta30-0009" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="1.0.0" />

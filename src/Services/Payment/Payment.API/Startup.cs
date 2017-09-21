@@ -88,6 +88,9 @@ namespace Payment.API
             // Configure persistence
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
+            // Use JSON.NET serializer
+            endpointConfiguration.UseSerialization<NewtonsoftSerializer>();
+
             // Enable the Outbox.
             endpointConfiguration.EnableOutbox();
 

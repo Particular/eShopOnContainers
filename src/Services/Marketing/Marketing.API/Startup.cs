@@ -190,12 +190,15 @@
             // Configure persistence
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
-            // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
-            // You might want to turn this off in production, so that DevOps can use scripts to create these.
-            endpointConfiguration.EnableInstallers();
+            // Use JSON.NET serializer
+            endpointConfiguration.UseSerialization<NewtonsoftSerializer>();
 
             // Enable the Outbox.
             endpointConfiguration.EnableOutbox();
+
+            // Make sure NServiceBus creates queues in RabbitMQ, tables in SQL Server, etc.
+            // You might want to turn this off in production, so that DevOps can use scripts to create these.
+            endpointConfiguration.EnableInstallers();
 
             // Define conventions
             var conventions = endpointConfiguration.Conventions();
