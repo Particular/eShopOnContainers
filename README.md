@@ -35,12 +35,11 @@ Using [the Outbox feature](https://docs.particular.net/nservicebus/outbox/) alon
 
 #### [Sagas](https://docs.particular.net/nservicebus/sagas/) 
 
-TODO: describe the customer's remorse, include snippet 
+NServiceBus allows to handle long-running, stateful processes using Sagas.
 
 #### Monitoring and visualization tools
 
-TODO: get a screenshot from SI/SP showing failed messages and flow of messages in the solution
-TODO: write one paragraph explaining how it works
+ServiceInsight generates visualizations based on runtime information, mainly gathered from messages metadata. That allows for example to see what messages are flowing through the system and which endpoints/services communicate.
 
 
 ## Architectural/design considerations
@@ -54,8 +53,6 @@ In NServiceBus messages are the basic unit of communication. From the technical 
 
 The simplest way to define a message in a system using NServiceBus is to have it implement one of the marker interfaces (`IMessage`, `ICommand` or `IEvent`). In the eShopOnContainers we use instead the _unobtrusive mode_, which allows us to define messages without forcing a dependency on NServiceBus for message classes.
 
-TODO: include snippet here from the app to show how it's done
-
 
 ### Messages and loose-coupling/Ensuring system maintainability
 
@@ -66,16 +63,14 @@ To ensure that applications are maintainable and easy to evolve, follow those re
 
 Typically in NServiceBus projects messages are defined in separate assemblies that are then shared between services. Those assemblies become contracts between two or more services. In sample projects we often keep all message definitions in a single assembly for simplicity, however in production code it’s better to have multiple assemblies with just a few message definitions in each, to make systems easier to evolve.
 
-In eShopOnContainers project we used a less popular approach, i.e. the message definitions are duplicated in services. That approach is harder to implement from the technical perspective and more brittle, for example, you won’t get compile-time errors when message definitions in two different services get out of sync. To avoid complicated customizations, we had to ensure messages are using the same namespaces. Unfortunately, that caused conflicts in tests which now are disabled. 
+In eShopOnContainers project we used another approach, i.e. the message definitions are duplicated in services. That approach is harder to implement from the technical perspective and tends to be more brittle, for example, you won’t get compile-time errors when message definitions in two different services get out of sync. On the other hand, if you have a solid set of tests this approach allows for greater flexibility when evolving services.
 
-Keep in mind that even though we don’t have an explicit dependencies on the shared library with messages definitions, there still exists coupling between services that need to be able to communicate. Only in this case the coupling is implicit and thus problems may manifest at later stages, e.g. only at runtime. 
+Keep in mind that even though we don’t have an explicit dependencies on the shared library with messages definitions, there still exists coupling between services that need to be able to communicate. Only in this case the coupling is implicit and thus problems may manifest at later stages, e.g. only at runtime. Cover your contracts with automated tests to avoid unpleasant surprises. 
 
 
 ### Messages routing
 
 NServiceBus automatically scans all assemblies to find message definitions and handlers for messages. We need to provide some additional [routing configuration](https://docs.particular.net/nservicebus/messaging/routing) to ensure NServiceBus knows where to send messages and commands.
-
-TODO: include routing definition code here
 
 
 ## Deployment
