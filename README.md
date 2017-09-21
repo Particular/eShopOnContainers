@@ -1,6 +1,6 @@
  # eShopOnContainers with NServiceBus
 
-This is a fork of a [sample .NET Core reference application](https://github.com/dotnet-architecture/eShopOnContainers] developed by Microsoft, modified to run on top of NServiceBus. 
+This is a fork of a [sample .NET Core reference application](https://github.com/dotnet-architecture/eShopOnContainers) developed by Microsoft, modified to run on top of NServiceBus. 
 
 The application is based on a simplified microservices architecture and Docker containers. It is more comprehensive and complex than typical sample applications, in particular, it shows many NServiceBus features working together.
 
