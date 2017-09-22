@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ###############################################################################
 # Set default behavior to automatically normalize line endings.
 ###############################################################################
@@ -134,4 +133,3 @@
 *.snk 	-text -diff
 *.cub 	-text -diff
 *.wixlib	-text -diff
->>>>>>> 1d1f100... Sync with RepoStandards
