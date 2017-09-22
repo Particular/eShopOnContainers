@@ -37,13 +37,15 @@
 #*.wwaproj   merge=binary
 
 ###############################################################################
-# behavior for image files
+# behavior for image, zip & pfx files
 #
 # image files are treated as binary by default.
 ###############################################################################
 #*.jpg   binary
 #*.png   binary
 #*.gif   binary
+*.pfx   binary
+*.zip   binary
 
 ###############################################################################
 # diff behavior for common document formats
