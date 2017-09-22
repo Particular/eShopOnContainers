@@ -174,6 +174,9 @@ namespace Microsoft.eShopOnContainers.Services.Locations.API
             // You might want to turn this off in production, so that DevOps can use scripts to create these.
             endpointConfiguration.EnableInstallers();
 
+            // Turn on auditing.
+            endpointConfiguration.AuditProcessedMessagesTo("audit");
+
             // Define conventions
             var conventions = endpointConfiguration.Conventions();
             conventions.DefiningEventsAs(c => c.Namespace != null && c.Name.EndsWith("IntegrationEvent"));
