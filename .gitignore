@@ -50,11 +50,8 @@ ParticularSoftware/
 *.lock.json
 *.userosscache
 *.sln.docstates
-<<<<<<< HEAD
 .vscode/
-=======
 .vs/
->>>>>>> 1d1f100... Sync with RepoStandards
 
 # mac temp file ignore
 .DS_Store
@@ -71,15 +68,12 @@ bld/
 [Bb]in/
 [Oo]bj/
 
-<<<<<<< HEAD
 # Visual Studio 2015 cache/options directory
 .vs/
 # Uncomment if you have tasks that create the project's static files in wwwroot
 **/wwwroot/lib/
-=======
 # Roslyn cache directories
 *.ide/
->>>>>>> 1d1f100... Sync with RepoStandards
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
@@ -89,7 +83,6 @@ bld/
 *.VisualState.xml
 TestResult.xml
 
-<<<<<<< HEAD
 # Build Results of an ATL Project
 [Dd]ebugPS/
 [Rr]eleasePS/
@@ -149,11 +142,6 @@ $tf/
 
 # Guidance Automation Toolkit
 *.gpState
-=======
-# NCrunch
-_NCrunch_*
-.*crunch*.local.xml
->>>>>>> 1d1f100... Sync with RepoStandards
 
 # ReSharper is a .NET coding add-in
 _ReSharper*/
@@ -162,7 +150,6 @@ _ReSharper*/
 
 src/scaffolding.config
 
-<<<<<<< HEAD
 # TeamCity is a build add-in
 _TeamCity*
 
@@ -318,12 +305,10 @@ pub/
 .eshopdocker_*
 /src/Web/WebMVC/wwwroot/lib
 /src/Web/WebMVC/wwwroot/css/site.min.css
-=======
+
 # Approval tests temp file
 *.received.*
 
 # JetBrains Rider
 .idea/
 *.sln.iml
->>>>>>> 1d1f100... Sync with RepoStandards
-/src/Services/Payment/Payment.API/ParticularSoftware
