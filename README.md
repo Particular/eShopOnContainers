@@ -39,7 +39,9 @@ NServiceBus allows to handle long-running, stateful processes using Sagas.
 
 #### Monitoring and visualization tools
 
-ServiceInsight generates visualizations based on runtime information, mainly gathered from messages metadata. That allows for example to see what messages are flowing through the system and which endpoints/services communicate.
+[ServiceInsight](https://docs.particular.net/serviceinsight/) generates visualizations based on runtime information, mainly gathered from messages metadata. That allows for example to see what messages are flowing through the system and which endpoints/services communicate.
+
+[ServicePulse](https://docs.particular.net/servicepulse/) comes with a Dashboard for monitoring endpoints, it shows basic statistics regarding rate of processing, information about failed messages, and more. Additionally, it allows for retrying failed messages with a single button click.
 
 
 ## Architectural/design considerations
@@ -51,7 +53,7 @@ NServiceBus is an opinionated framework, following principles for building distr
 
 In NServiceBus messages are the basic unit of communication. From the technical perspective, they are just simple POCO objects. Messages that request performing a specific action are called _commands_ and messages informing about the fact that something has happened are called _events_. See the [Conventions](https://docs.particular.net/nservicebus/messaging/conventions) article to learn more.
 
-The simplest way to define a message in a system using NServiceBus is to have it implement one of the marker interfaces (`IMessage`, `ICommand` or `IEvent`). In the eShopOnContainers we use instead the _unobtrusive mode_, which allows us to define messages without forcing a dependency on NServiceBus for message classes.
+The simplest way to define a message in a system using NServiceBus is to have it implement one of the marker interfaces (`IMessage`, `ICommand` or `IEvent`). In the eShopOnContainers we use instead the [_unobtrusive mode_](https://docs.particular.net/nservicebus/messaging/unobtrusive-mode), which allows us to define messages without forcing a dependency on NServiceBus for message classes.
 
 
 ### Messages and loose-coupling/Ensuring system maintainability
