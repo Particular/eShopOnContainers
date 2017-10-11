@@ -3,7 +3,7 @@ version: '2.1'
 services:
 
   basket.api:
-    image: eshop/basket.api:${TAG:-latest}
+    image: eshop/basket.api
     build:
       context: ./src/Services/Basket/Basket.API
       dockerfile: Dockerfile    
@@ -14,7 +14,7 @@ services:
       - sql.data
 
   catalog.api:
-    image: eshop/catalog.api:${TAG:-latest}
+    image: eshop/catalog.api
     build:
       context: ./src/Services/Catalog/Catalog.API
       dockerfile: Dockerfile    
@@ -23,7 +23,7 @@ services:
       - rabbitmq
 
   identity.api:
-    image: eshop/identity.api:${TAG:-latest}
+    image: eshop/identity.api
     build:
       context: ./src/Services/Identity/Identity.API
       dockerfile: Dockerfile    
@@ -31,7 +31,7 @@ services:
       - sql.data
 
   ordering.api:
-    image: eshop/ordering.api:${TAG:-latest}
+    image: eshop/ordering.api
     build:
       context: ./src/Services/Ordering/Ordering.API
       dockerfile: Dockerfile    
@@ -40,7 +40,7 @@ services:
       - rabbitmq
 
   marketing.api:
-    image: eshop/marketing.api:${TAG:-latest}
+    image: eshop/marketing.api
     build:
       context: ./src/Services/Marketing/Marketing.API
       dockerfile: Dockerfile    
@@ -51,7 +51,7 @@ services:
       - rabbitmq
 
   webspa:
-    image: eshop/webspa:${TAG:-latest}
+    image: eshop/webspa
     build:
       context: ./src/Web/WebSPA
       dockerfile: Dockerfile    
@@ -63,7 +63,7 @@ services:
       - marketing.api
 
   webmvc:
-    image: eshop/webmvc:${TAG:-latest}
+    image: eshop/webmvc
     build:
       context: ./src/Web/WebMVC
       dockerfile: Dockerfile    
@@ -75,13 +75,13 @@ services:
       - marketing.api
 
   webstatus:
-    image: eshop/webstatus:${TAG:-latest}
+    image: eshop/webstatus
     build:
       context: ./src/Web/WebStatus
       dockerfile: Dockerfile
 
   payment.api:
-    image: eshop/payment.api:${TAG:-latest}
+    image: eshop/payment.api
     build:
       context: ./src/Services/Payment/Payment.API
       dockerfile: Dockerfile
@@ -90,7 +90,7 @@ services:
       - sql.data
     
   locations.api:
-    image: eshop/locations.api:${TAG:-latest}
+    image: eshop/locations.api
     build:
       context: ./src/Services/Location/Locations.API
       dockerfile: Dockerfile
