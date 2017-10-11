@@ -212,7 +212,7 @@ namespace Microsoft.eShopOnContainers.Services.Locations.API
                 connection.Open();
                 var command = connection.CreateCommand();
                 command.CommandText =
-                    $"IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '[{originalCatalog}]')" +
+                    $"IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '{originalCatalog}')" +
                     $"  CREATE DATABASE [{originalCatalog}]";
                 command.ExecuteNonQuery();
             }
