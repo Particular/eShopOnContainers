@@ -100,7 +100,7 @@ services:
       - sql.data
 
   sql.data:
-    image: microsoft/mssql-server-linux:latest
+    image: microsoft/mssql-server-linux:2017-latest
 
   nosql.data:
     image: mongo
