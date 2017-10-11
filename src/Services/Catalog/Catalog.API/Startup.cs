@@ -18,6 +18,7 @@
     using System.Data.SqlClient;
     using System.Reflection;
     using System.Threading.Tasks;
+    using NServiceBus.Persistence.Sql;
     using Polly;
 
     public class Startup
@@ -136,6 +137,8 @@
 
         private IContainer RegisterEventBus(ContainerBuilder containerBuilder)
         {
+            EnsureSqlDatabaseExists();
+
             IEndpointInstance endpoint = null;
             containerBuilder.Register(c => endpoint)
                 .As<IEndpointInstance>()
@@ -151,7 +154,10 @@
             transport.ConnectionString(GetRabbitConnectionString());
 
             // Configure persistence
-            endpointConfiguration.UsePersistence<InMemoryPersistence>();
+            var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
+            persistence.SqlDialect<SqlDialect.MsSqlServer>();
+            persistence.ConnectionBuilder(connectionBuilder:
+                () => new SqlConnection(Configuration["ConnectionString"]));
 
             // Use JSON.NET serializer
             endpointConfiguration.UseSerialization<NewtonsoftSerializer>();
@@ -180,6 +186,25 @@
             endpoint = Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
 
             return container;
+        }
+
+        void EnsureSqlDatabaseExists()
+        {
+            var builder = new SqlConnectionStringBuilder(Configuration["ConnectionString"]);
+            var originalCatalog = builder.InitialCatalog;
+
+            builder.InitialCatalog = "master";
+            var masterConnectionString = builder.ConnectionString;
+
+            using (var connection = new SqlConnection(masterConnectionString))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText =
+                    $"IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '{originalCatalog}')" +
+                    $"  CREATE DATABASE [{originalCatalog}]";
+                command.ExecuteNonQuery();
+            }
         }
 
         private string GetRabbitConnectionString()
