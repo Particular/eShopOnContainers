@@ -46,6 +46,7 @@
 #*.gif   binary
 *.pfx   binary
 *.zip   binary
+*.woff	binary
 
 ###############################################################################
 # diff behavior for common document formats
