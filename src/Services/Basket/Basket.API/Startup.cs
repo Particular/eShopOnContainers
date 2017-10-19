@@ -23,6 +23,9 @@ using NServiceBus;
 
 namespace Microsoft.eShopOnContainers.Services.Basket.API
 {
+    using System.Data.SqlClient;
+    using NServiceBus.Persistence.Sql;
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -177,6 +180,8 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API
 
         private IContainer RegisterEventBus(ContainerBuilder containerBuilder)
         {
+            EnsureSqlDatabaseExists();
+
             IEndpointInstance endpoint = null;
             containerBuilder.Register(c => endpoint)
                 .As<IEndpointInstance>()
@@ -192,7 +197,10 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API
             transport.ConnectionString(GetRabbitConnectionString());
 
             // Configure persistence
-            endpointConfiguration.UsePersistence<InMemoryPersistence>();
+            var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
+            persistence.SqlDialect<SqlDialect.MsSqlServer>();
+            persistence.ConnectionBuilder(connectionBuilder:
+                () => new SqlConnection(Configuration["SqlConnectionString"]));
 
             // Use JSON.NET serializer
             endpointConfiguration.UseSerialization<NewtonsoftSerializer>();
@@ -221,6 +229,25 @@ namespace Microsoft.eShopOnContainers.Services.Basket.API
             endpoint = Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
 
             return container;
+        }
+
+        void EnsureSqlDatabaseExists()
+        {
+            var builder = new SqlConnectionStringBuilder(Configuration["SqlConnectionString"]);
+            var originalCatalog = builder.InitialCatalog;
+
+            builder.InitialCatalog = "master";
+            var masterConnectionString = builder.ConnectionString;
+
+            using (var connection = new SqlConnection(masterConnectionString))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText =
+                    $"IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '{originalCatalog}')" +
+                    $"  CREATE DATABASE [{originalCatalog}]";
+                command.ExecuteNonQuery();
+            }
         }
 
         private string GetRabbitConnectionString()

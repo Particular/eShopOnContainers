@@ -12,7 +12,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://0.0.0.0:80
-      - ConnectionString=${ESHOP_AZURE_BASKET_DB:-Server=sql.data;Database=Microsoft.eShopOnContainers.Services.BasketDb;User Id=sa;Password=Pass@word}
+      - SqlConnectionString=${ESHOP_AZURE_BASKET_DB:-Server=sql.data;Database=Microsoft.eShopOnContainers.Services.BasketDb;User Id=sa;Password=Pass@word}
       - ConnectionString=${ESHOP_AZURE_REDIS_BASKET_DB:-basket.data}
       - identityUrl=http://identity.api              #Local: You need to open your local dev-machine firewall at range 5100-5110.
       - IdentityUrlExternal=http://${ESHOP_EXTERNAL_DNS_NAME_OR_IP}:5105
@@ -157,7 +157,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://0.0.0.0:80
-      - ConnectionString=${ESHOP_AZURE_LOCATIONS_DB:-Server=sql.data;Database=Microsoft.eShopOnContainers.Services.LocationsDb;User Id=sa;Password=Pass@word}
+      - SqlConnectionString=${ESHOP_AZURE_LOCATIONS_DB:-Server=sql.data;Database=Microsoft.eShopOnContainers.Services.LocationsDb;User Id=sa;Password=Pass@word}
       - ConnectionString=${ESHOP_AZURE_COSMOSDB:-mongodb://nosql.data}
       - Database=LocationsDb
       - identityUrl=http://identity.api              #Local: You need to open your local dev-machine firewall at range 5100-5110. 
@@ -171,7 +171,7 @@ services:
 
   sql.data:
     environment:
-      - SA_PASSWORD=Pass@word
+      - MSSQL_SA_PASSWORD=Pass@word
       - ACCEPT_EULA=Y
       - MSSQL_PID=Developer
     ports:

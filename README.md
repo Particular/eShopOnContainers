@@ -78,6 +78,8 @@ NServiceBus automatically scans all assemblies to find message definitions and h
 
 ### Generating databases
 
-Some of the NServiceBus features, e.g. Outbox, require persistance, i.e. a persistent storage. In this sample we use SQL persistence running on top of MS SQL Server databases.
+Some of the NServiceBus features, e.g. Outbox, require persistent storage. In this sample we use SQL persistence running on top of MS SQL Server databases.
 
 In a dev/test environments you can rely on built-in NServiceBus installers to automatically create databases and tables. However, in production you should use generated scripts and follow the workflow similar to the one described in the [Installer Workflow](https://docs.particular.net/persistence/sql/installer-workflow) article.
+
+In order to provide a smooth development experience, each NServiceBus endpoint ensures that required database catalog is created before the endpoint starts.
