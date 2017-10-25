@@ -312,3 +312,6 @@ pub/
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+# VS for Mac
+*.userprefs
