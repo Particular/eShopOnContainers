@@ -10,7 +10,12 @@ namespace Ordering.API.Application.Sagas
     using NServiceBus.Persistence.Sql;
 
     public class GracePeriod : SqlSaga<GracePeriod.GracePeriodState>,
-        IAmStartedByMessages<OrderStartedIntegrationEvent>
+        IAmStartedByMessages<OrderStartedIntegrationEvent>,
+        IHandleMessages<OrderStockConfirmedIntegrationEvent>,
+        IHandleMessages<OrderStockRejectedIntegrationEvent>,
+        IHandleMessages<OrderPaymentSuccededIntegrationEvent>,
+        IHandleMessages<OrderPaymentFailedIntegrationEvent>,
+        IHandleTimeouts<GracePeriodExpired>
     {
         readonly OrderingSettings settings;
 
@@ -38,6 +43,36 @@ namespace Ordering.API.Application.Sagas
             public string OriginalMessageId { get; set; }
 
             public int OrderIdentifier { get; set; }
+        }
+
+        public async Task Timeout(GracePeriodExpired state, IMessageHandlerContext context)
+        {
+            var @event = new GracePeriodConfirmedIntegrationEvent(Data.OrderIdentifier);
+            await context.Publish(@event);
+
+            MarkAsComplete();
+        }
+
+        // OrderStatusChangedToStockConfirmedIntegrationEvent
+
+        public Task Handle(OrderStockConfirmedIntegrationEvent message, IMessageHandlerContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Handle(OrderStockRejectedIntegrationEvent message, IMessageHandlerContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Handle(OrderPaymentSuccededIntegrationEvent message, IMessageHandlerContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Handle(OrderPaymentFailedIntegrationEvent message, IMessageHandlerContext context)
+        {
+            throw new NotImplementedException();
         }
     }
 }
