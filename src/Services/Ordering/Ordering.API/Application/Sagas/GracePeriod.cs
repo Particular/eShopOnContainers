@@ -33,6 +33,14 @@ namespace Ordering.API.Application.Sagas
 
         public async Task Handle(OrderStartedIntegrationEvent message, IMessageHandlerContext context)
         {
+            Data.UserId = message.UserId;
+
+            // We'll do the following actions at the same time, but asynchronous
+            // - Grace Period
+            // - ~~Verify buyer and payment method~~
+            // - Verify if there is stock available
+            var @event = new OrderStatusChangedToAwaitingValidationIntegrationEvent(message.OrderId, message.OrderedItems);
+            await context.Publish(@event);
             await RequestTimeout<GracePeriodExpired>(context, TimeSpan.FromMinutes(settings.GracePeriodTime));
         }
 
@@ -43,25 +51,40 @@ namespace Ordering.API.Application.Sagas
             public string OriginalMessageId { get; set; }
 
             public int OrderIdentifier { get; set; }
+            public string UserId { get; set; }
+            public bool GracePeriodIsOver { get; set; }
+            public bool StockConfirmed { get; set; }
         }
 
         public async Task Timeout(GracePeriodExpired state, IMessageHandlerContext context)
         {
-            var @event = new GracePeriodConfirmedIntegrationEvent(Data.OrderIdentifier);
-            await context.Publish(@event);
-
-            MarkAsComplete();
+            Data.GracePeriodIsOver = true;
+            await ContinueOrderingProcess(context);
         }
 
-        // OrderStatusChangedToStockConfirmedIntegrationEvent
-
-        public Task Handle(OrderStockConfirmedIntegrationEvent message, IMessageHandlerContext context)
+        private async Task ContinueOrderingProcess(IMessageHandlerContext context)
         {
-            throw new NotImplementedException();
+            if (Data.GracePeriodIsOver && Data.StockConfirmed)
+            {
+                // Should this be OrderStatusChangedToStockConfirmedIntegrationEvent ???
+                var @event = new GracePeriodConfirmedIntegrationEvent(Data.OrderIdentifier);
+                await context.Publish(@event);
+
+                // Should we immediately do this?
+                var event2 = new OrderStatusChangedToStockConfirmedIntegrationEvent(Data.OrderIdentifier);
+                await context.Publish(event2);
+            }
+        }
+
+        public async Task Handle(OrderStockConfirmedIntegrationEvent message, IMessageHandlerContext context)
+        {
+            Data.StockConfirmed = true;
+            await ContinueOrderingProcess(context);
         }
 
         public Task Handle(OrderStockRejectedIntegrationEvent message, IMessageHandlerContext context)
         {
+            // This should probably update the order (ie fire an event) so that the UI is updated that it failed.
             throw new NotImplementedException();
         }
 

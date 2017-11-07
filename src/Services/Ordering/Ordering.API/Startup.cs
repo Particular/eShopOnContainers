@@ -221,6 +221,7 @@
             // Define conventions
             var conventions = endpointConfiguration.Conventions();
             conventions.DefiningEventsAs(c => c.Namespace != null && c.Name.EndsWith("IntegrationEvent"));
+            conventions.DefiningCommandsAs(c => c.Namespace != null && c.Namespace.EndsWith("Messages") && c.Name.EndsWith("Command"));
 
             // Configure the DI container.
             endpointConfiguration.UseContainer<AutofacBuilder>(customizations: customizations => { customizations.ExistingLifetimeScope(container); });
