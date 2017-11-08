@@ -1,0 +1,6 @@
+version: '2.1'
+
+services:
+  webmvc:
+    environment:
+      - IdentityUrl=http://docker.for.mac.localhost:5105
