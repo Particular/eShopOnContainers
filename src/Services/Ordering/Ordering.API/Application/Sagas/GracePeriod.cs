@@ -83,6 +83,9 @@ namespace Ordering.API.Application.Sagas
         {
             // TODO: Publish this, but perhaps create a saga in stock as wel???
             //new OrderStatusChangedToPaidIntegrationEvent(Data.OrderIdentifier, )
+
+            MarkAsComplete();
+
             return Task.CompletedTask;
         }
 
