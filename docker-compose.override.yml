@@ -119,7 +119,7 @@ services:
       - CatalogUrl=http://catalog.api
       - OrderingUrl=http://ordering.api
       - BasketUrl=http://basket.api
-      - IdentityUrl=http://docker.for.mac.localhost:5105
+      - IdentityUrl=http://10.0.75.1:5105
       - MarketingUrl=http://marketing.api  #Local:  Use 10.0.75.1 in a "Docker for Windows" environment, if using "localhost" from browser. 
                                                  #Remote: Use ${ESHOP_EXTERNAL_DNS_NAME_OR_IP} if using external IP or DNS name from browser. 
       - UseCustomizationData=True
