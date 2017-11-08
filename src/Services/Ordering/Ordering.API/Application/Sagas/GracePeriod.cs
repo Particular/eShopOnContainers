@@ -15,6 +15,7 @@ namespace Ordering.API.Application.Sagas
         IHandleMessages<OrderStockRejectedIntegrationEvent>,
         IHandleMessages<OrderPaymentSuccededIntegrationEvent>,
         IHandleMessages<OrderPaymentFailedIntegrationEvent>,
+        IHandleMessages<OrderCancelledIntegrationEvent>,
         IHandleTimeouts<GracePeriodExpired>
     {
         readonly OrderingSettings settings;
@@ -41,7 +42,6 @@ namespace Ordering.API.Application.Sagas
             // - Verify if there is stock available
             var @event = new OrderStatusChangedToAwaitingValidationIntegrationEvent(message.OrderId, message.OrderedItems);
             await context.Publish(@event);
-            await RequestTimeout<GracePeriodExpired>(context, TimeSpan.FromMinutes(settings.GracePeriodTime));
         }
 
         public class GracePeriodState : IContainSagaData
@@ -66,13 +66,12 @@ namespace Ordering.API.Application.Sagas
         {
             if (Data.GracePeriodIsOver && Data.StockConfirmed)
             {
-                // Should this be OrderStatusChangedToStockConfirmedIntegrationEvent ???
                 var @event = new GracePeriodConfirmedIntegrationEvent(Data.OrderIdentifier);
                 await context.Publish(@event);
 
                 // Should we immediately do this?
-                var event2 = new OrderStatusChangedToStockConfirmedIntegrationEvent(Data.OrderIdentifier);
-                await context.Publish(event2);
+                var stockConfirmedEvent = new OrderStatusChangedToStockConfirmedIntegrationEvent(Data.OrderIdentifier);
+                await context.Publish(stockConfirmedEvent);
             }
         }
 
@@ -85,17 +84,24 @@ namespace Ordering.API.Application.Sagas
         public Task Handle(OrderStockRejectedIntegrationEvent message, IMessageHandlerContext context)
         {
             // This should probably update the order (ie fire an event) so that the UI is updated that it failed.
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public Task Handle(OrderPaymentSuccededIntegrationEvent message, IMessageHandlerContext context)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public Task Handle(OrderPaymentFailedIntegrationEvent message, IMessageHandlerContext context)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
+        }
+
+        public Task Handle(OrderCancelledIntegrationEvent message, IMessageHandlerContext context)
+        {
+            // Nothing more to do; the saga is over
+            MarkAsComplete();
+            return Task.CompletedTask;
         }
     }
 }

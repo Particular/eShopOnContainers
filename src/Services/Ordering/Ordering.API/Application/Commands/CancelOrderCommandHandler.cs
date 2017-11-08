@@ -9,6 +9,10 @@ using System.Threading.Tasks;
 
 namespace Ordering.API.Application.Commands
 {
+    using eShopOnContainers.Services.IntegrationEvents.Events;
+    using NServiceBus;
+
+    // TODO: Replace with an NSB command
     public class CancelOrderCommandIdentifiedHandler : IdentifierCommandHandler<CancelOrderCommand, bool>
     {
         public CancelOrderCommandIdentifiedHandler(IMediator mediator, IRequestManager requestManager) : base(mediator, requestManager)
@@ -24,22 +28,24 @@ namespace Ordering.API.Application.Commands
     public class CancelOrderCommandHandler : IAsyncRequestHandler<CancelOrderCommand, bool>
     {
         private readonly IOrderRepository _orderRepository;
+        private readonly IEndpointInstance _endpoint;
 
-        public CancelOrderCommandHandler(IOrderRepository orderRepository)
+
+        public CancelOrderCommandHandler(IOrderRepository orderRepository, IEndpointInstance endpoint)
         {
             _orderRepository = orderRepository;
+            this._endpoint = endpoint;
         }
 
         /// <summary>
-        /// Handler which processes the command when
-        /// customer executes cancel order from app
+        /// Handler which processes the command when customer executes cancel order from app
         /// </summary>
-        /// <param name="command"></param>
-        /// <returns></returns>
         public async Task<bool> Handle(CancelOrderCommand command)
         {
             var orderToUpdate = await _orderRepository.GetAsync(command.OrderNumber);
             orderToUpdate.SetCancelledStatus();
+            var orderCancelledEvent = new OrderCancelledIntegrationEvent(command.OrderNumber);
+            await _endpoint.Publish(orderCancelledEvent);
             return await _orderRepository.UnitOfWork.SaveEntitiesAsync();
         }
     }
