@@ -42,6 +42,8 @@ namespace Ordering.API.Application.Sagas
             // - Verify if there is stock available
             var @event = new OrderStatusChangedToAwaitingValidationIntegrationEvent(message.OrderId, message.OrderedItems);
             await context.Publish(@event);
+
+            await RequestTimeout<GracePeriodExpired>(context, TimeSpan.FromMinutes(settings.GracePeriodTime));
         }
 
         public class GracePeriodState : IContainSagaData

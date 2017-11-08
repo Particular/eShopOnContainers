@@ -42,6 +42,7 @@ namespace Ordering.API.Application.Commands
         /// </summary>
         public async Task<bool> Handle(CancelOrderCommand command)
         {
+            // TODO: This is 'orchestrated' here, should this be moved somehow to the saga? Maybe we cannot cancel anymore?
             var orderToUpdate = await _orderRepository.GetAsync(command.OrderNumber);
             orderToUpdate.SetCancelledStatus();
             var orderCancelledEvent = new OrderCancelledIntegrationEvent(command.OrderNumber);
