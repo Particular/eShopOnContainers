@@ -97,26 +97,14 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
 
         public void SetAwaitingValidationStatus()
         {
-            if (_orderStatusId == OrderStatus.Cancelled.Id ||
-                _orderStatusId != OrderStatus.Submitted.Id)
-            {
-                StatusChangeException(OrderStatus.AwaitingValidation);
-            }  
-
-            AddDomainEvent(new OrderStatusChangedToAwaitingValidationDomainEvent(Id, _orderItems));
+            // TODO: remove this
+            // AddDomainEvent(new OrderStatusChangedToAwaitingValidationDomainEvent(Id, _orderItems));
 
             _orderStatusId = OrderStatus.AwaitingValidation.Id;
         }
 
         public void SetStockConfirmedStatus()
         {
-            if (_orderStatusId != OrderStatus.AwaitingValidation.Id)
-            {
-                StatusChangeException(OrderStatus.StockConfirmed);
-            }
-
-            AddDomainEvent(new OrderStatusChangedToStockConfirmedDomainEvent(Id));
-
             _orderStatusId = OrderStatus.StockConfirmed.Id;
             _description = "All the items were confirmed with available stock.";
         }
@@ -127,8 +115,6 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
             {
                 StatusChangeException(OrderStatus.Paid);
             }
-
-            AddDomainEvent(new OrderStatusChangedToPaidDomainEvent(Id, OrderItems));
 
             _orderStatusId = OrderStatus.Paid.Id;
             _description = "The payment was performed at a simulated \"American Bank checking bank account endinf on XX35071\"";

@@ -28,6 +28,11 @@ namespace Ordering.API.Application.Sagas
         protected override void ConfigureMapping(IMessagePropertyMapper mapper)
         {
             mapper.ConfigureMapping<OrderStartedIntegrationEvent>(_ => _.OrderId);
+            mapper.ConfigureMapping<OrderStockConfirmedIntegrationEvent>(_ => _.OrderId);
+            mapper.ConfigureMapping<OrderStockRejectedIntegrationEvent>(_ => _.OrderId);
+            mapper.ConfigureMapping<OrderPaymentSuccededIntegrationEvent>(_ => _.OrderId);
+            mapper.ConfigureMapping<OrderPaymentFailedIntegrationEvent>(_ => _.OrderId);
+            mapper.ConfigureMapping<OrderCancelledIntegrationEvent>(_ => _.OrderId);
         }
 
         protected override string CorrelationPropertyName => nameof(GracePeriodState.OrderIdentifier);
@@ -46,18 +51,6 @@ namespace Ordering.API.Application.Sagas
             await RequestTimeout<GracePeriodExpired>(context, TimeSpan.FromMinutes(settings.GracePeriodTime));
         }
 
-        public class GracePeriodState : IContainSagaData
-        {
-            public Guid Id { get; set; }
-            public string Originator { get; set; }
-            public string OriginalMessageId { get; set; }
-
-            public int OrderIdentifier { get; set; }
-            public string UserId { get; set; }
-            public bool GracePeriodIsOver { get; set; }
-            public bool StockConfirmed { get; set; }
-        }
-
         public async Task Timeout(GracePeriodExpired state, IMessageHandlerContext context)
         {
             Data.GracePeriodIsOver = true;
@@ -68,10 +61,6 @@ namespace Ordering.API.Application.Sagas
         {
             if (Data.GracePeriodIsOver && Data.StockConfirmed)
             {
-                var @event = new GracePeriodConfirmedIntegrationEvent(Data.OrderIdentifier);
-                await context.Publish(@event);
-
-                // Should we immediately do this?
                 var stockConfirmedEvent = new OrderStatusChangedToStockConfirmedIntegrationEvent(Data.OrderIdentifier);
                 await context.Publish(stockConfirmedEvent);
             }
@@ -85,17 +74,22 @@ namespace Ordering.API.Application.Sagas
 
         public Task Handle(OrderStockRejectedIntegrationEvent message, IMessageHandlerContext context)
         {
-            // This should probably update the order (ie fire an event) so that the UI is updated that it failed.
+            // Another handler for OrderStockRejectedIntegrationEvent will update the status of the order
+            MarkAsComplete();
             return Task.CompletedTask;
         }
 
         public Task Handle(OrderPaymentSuccededIntegrationEvent message, IMessageHandlerContext context)
         {
+            // TODO: Publish this, but perhaps create a saga in stock as wel???
+            //new OrderStatusChangedToPaidIntegrationEvent(Data.OrderIdentifier, )
             return Task.CompletedTask;
         }
 
         public Task Handle(OrderPaymentFailedIntegrationEvent message, IMessageHandlerContext context)
         {
+            // Another handler for OrderPaymentFailedIntegrationEvent will update the status of the order
+            MarkAsComplete();
             return Task.CompletedTask;
         }
 
@@ -104,6 +98,21 @@ namespace Ordering.API.Application.Sagas
             // Nothing more to do; the saga is over
             MarkAsComplete();
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// State for our GracePeriod saga
+        /// </summary>
+        public class GracePeriodState : IContainSagaData
+        {
+            public Guid Id { get; set; }
+            public string Originator { get; set; }
+            public string OriginalMessageId { get; set; }
+
+            public int OrderIdentifier { get; set; }
+            public string UserId { get; set; }
+            public bool GracePeriodIsOver { get; set; }
+            public bool StockConfirmed { get; set; }
         }
     }
 }

@@ -6,6 +6,7 @@ using Microsoft.eShopOnContainers.Services.Ordering.Domain.Seedwork;
 using Ordering.Infrastructure;
 using Ordering.Infrastructure.EntityConfigurations;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -64,8 +65,18 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
             // side effects from the domain event handlers which are using the same DbContext with "InstancePerLifetimeScope" or "scoped" lifetime
             // B) Right AFTER committing data (EF SaveChanges) into the DB will make multiple transactions. 
             // You will need to handle eventual consistency and compensatory actions in case of failures in any of the Handlers. 
-            await _mediator.DispatchDomainEventsAsync(this);
 
+            // TODO: Remove this, for debugging purposes:
+            var domainEntities = this.ChangeTracker
+                .Entries<Entity>()
+                .Where(x => x.Entity.DomainEvents != null && x.Entity.DomainEvents.Any());
+
+            var domainEvents = domainEntities
+                .SelectMany(x => x.Entity.DomainEvents)
+                .ToList();
+
+            // TODO: Remove this!!!
+            await _mediator.DispatchDomainEventsAsync(this);
 
             // After executing this line all the changes (from the Command Handler and Domain Event Handlers) 
             // performed throught the DbContext will be commited
