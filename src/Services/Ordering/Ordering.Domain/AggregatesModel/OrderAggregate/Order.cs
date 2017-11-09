@@ -145,11 +145,6 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
 
         public void SetCancelledStatusWhenStockIsRejected(IEnumerable<int> orderStockRejectedItems)
         {
-            if (_orderStatusId != OrderStatus.AwaitingValidation.Id)
-            {
-                StatusChangeException(OrderStatus.Cancelled);
-            }
-
             _orderStatusId = OrderStatus.Cancelled.Id;
 
             var itemsStockRejectedProductNames = OrderItems
