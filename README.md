@@ -31,13 +31,13 @@ Microsoft's eShopOnContainers solution contains a simple, light-weight `IEventBu
 
 NServiceBus comes with additional features that you'd most likely have to provide in your event bus implementation before going into production, including:
 
-#### Failures handling
+#### Automatic error handling
 
 Messages are [automatically retried](https://docs.particular.net/nservicebus/recoverability/) in case of delivery or processing failures.
 
 #### Transactions and consistency
 
-Using [the Outbox feature](https://docs.particular.net/nservicebus/outbox/) along with a persistence, for example in production with [SQL persistence](https://docs.particular.net/persistence/sql/), we ensure that messages are processed exactly once and we provide consistency between messages and downstream operations without using DTC. Note: Depending on the used RDBMS business data and NServiceBus related data might need to be stored in the same catalog to avoid any attempt to escalate local transactions to distributed ones.
+Using [the Outbox feature](https://docs.particular.net/nservicebus/outbox/), we ensure that messages are processed exactly once and we provide consistency between messages and downstream operations without using DTC. Note: Depending on the used RDBMS business data and NServiceBus related data might need to be stored in the same catalog to avoid any attempt to escalate local transactions to distributed ones.
 
 #### Sagas
 
