@@ -1,87 +1,59 @@
- # eShopOnContainers with NServiceBus
+# The *Grace Period* Saga
 
-This is a fork of a [sample .NET Core reference application](https://github.com/dotnet-architecture/eShopOnContainers) developed by Microsoft, modified to run on top of NServiceBus. For detailed instructions regarding running the solution, refer to the [Microsoft's how-to](https://github.com/dotnet-architecture/eShopOnContainers/wiki/02.-Setting-eShopOnContainers-in-a-Visual-Studio-2017-environment).
+The eShopOnContainers reference implementation implemented a business process called *grace period*. 
 
-The application is based on a simplified microservices architecture and Docker containers. It is more comprehensive and complex than typical sample applications, in particular, it shows many NServiceBus features working together.
+This is an implementation of a well known issue in eCommerce, called [buyers remorse](https://en.wikipedia.org/wiki/Buyer%27s_remorse). In short it means that minutes after making a purchase, customers decide they want to cancel their purchase. Instead of immediately processing a purchase, an eCommerce website decides to give customers the opportunity to cancel their order. The benefit for eCommerce websites is that processes like shipping a product don't go into effect until we're more sure that customer didn't regret their purchase.
 
-If you want to learn more about microservices/SOA architecture, domain modeling and service decomposition, watch [those selected videos](http://go.particular.net/ADSD-eShopOnContainers) from Udi Dahan's Advanced Distributed Systems Design course. 
+### Original implementation
 
-**We're actively working on this sample. To keep up with the code and documentation updates make sure to [watch this repository](https://help.github.com/articles/watching-repositories/). You can also [star the repository](https://help.github.com/articles/about-stars/) to quickly find it in the future.**
+After publishing the event that the order was purchases, the service responsible for the order implemented the grace period by first storing the order in the database. A process running in the background would query the database for orders where the grace period expired and publish a new event to continue the ordering process.
 
-**If you have any comments just open an issue in this repository, your feedback will be greatly appreciated!**
+##### Technical implementation
 
+An incoming `UserCheckoutAcceptedIntegrationEvent` arrives in the `Ordering` service. The handler for this event then sends a `CreateOrderCommand` which stores the order in the database.
 
-## Recommended resources
+The `GracePeriodManagerService` is the ASP.NET Core background process (it inherits `HostedService`, which has [hardly any documentation](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.hosting.ihostedservice?view=aspnetcore-2.0) at the time of writing) which queries the database and which will publish and `GracePeriodConfirmedIntegrationEvent`.
 
-- [Selected videos](http://go.particular.net/ADSD-eShopOnContainers) from Udi Dahan's Advanced Distributed Systems Design course about service design
-- [Put your events on a diet](https://skillsmatter.com/skillscasts/2990-events-diet) Andreas Ohlund's presentation and the related [blog post](https://particular.net/blog/putting-your-events-on-a-diet)
+### New implementation
 
+The new implementation is using an [NServiceBus Saga](https://docs.particular.net/nservicebus/sagas/). This completely replaces the need for a background process querying the database. The saga is able to schedule a message coming in to continue the process. These messages are called timeouts and are also stored in the database. However NServiceBus removes the plumbing and optimizes querying the database to reduce queries. It's also very flexible to use multiple timeout messages which have different intent and can contain data. In this example we only use on timeout called `GracePeriodExpired`.
 
-## NServiceBus overview
+### Constraints
 
-NServiceBus is a proven message bus that offers one-way, full-duplex, publish/subscribe, and other patterns on top of transports like RabbitMQ, Azure Service Bus, Azure Storage Queues, Amazon SQS, MSMQ, and MS SQL Server, as well as long-running and time-bound workflows called Sagas.
+Before starting to change the code to support NServiceBus sagas, we've set up some constraints:
 
-Microsoft's eShopOnContainers solution contains a simple, light-weight `IEventBus` implementation running on top of RabbitMQ. That implementation is only intended for development and testing. In this fork we replaced the test implementation with NServiceBus. 
+- The GracePeriod saga should orchestrate the business process
+- Domain events should be removed in favor of messages
+- ServiceInsight should be able to visualize the entire process
 
-NServiceBus comes with additional features that you'd most likely have to provide in your event bus implementation before going into production, including:
+##### GracePeriod saga should orchestrate the business process
 
-#### Failures handling
+The original code contained a large number of 'integration events', 'domain events' and 'commands' that basically did one of the following actions.
 
-Messages are [automatically retried](https://docs.particular.net/nservicebus/recoverability/) in case of delivery or processing failures.
+1. Store data into the database
+2. Verified a certain state
+3. Publish a new (integration) event
 
-#### Transactions and consistency
+The process itself was scattered throughout the code and pretty hard to follow. With a saga, you'll have a single class that can be triggered by multiple messages. But all the code that deals with the business process itself is inside a single class. This makes it more clear and the state of the business processes isn't altered by multiple incoming messages at the same time. NServiceBus takes care of any [concurrency issues](https://docs.particular.net/nservicebus/sagas/concurrency).
 
-Using [the Outbox feature](https://docs.particular.net/nservicebus/outbox/) along with a persistence, for example in production with [SQL persistence](https://docs.particular.net/persistence/sql/), we ensure that messages are processed exactly once and we provide consistency between messages and downstream operations without using DTC. Note: Depending on the used RDBMS business data and NServiceBus related data might need to be stored in the same catalog to avoid any attempt to escalate local transactions to distributed ones.
+Tip: Don't create sagas that handle a large amount of messages. We advise users of NServiceBus to split up sagas either inside a single service, sometimes over different services. This depends on the service the data is stored that the saga has to work with.
 
-#### [Sagas](https://docs.particular.net/nservicebus/sagas/) 
+##### Domain events should be removed
 
-NServiceBus allows to handle long-running, stateful processes using Sagas.
+The saga is triggered by incoming messages. These can be any (integration) event, but also timeouts that are triggered by the saga itself. Initially the domain events took a large role in this. Because the saga orchestrates the entire process and it is triggered by all incoming messages, the domain events lost their value. The saga literally becomes your domain model.
 
-In *eShopOnContainers* we implemented [a saga to orchestrate the grace period](/readme/graceperiod.md).
+There are still MVC controllers that use domain events.
 
-#### Monitoring and visualization tools
+##### ServiceInsight should be able to visualize the entire process
 
-[ServiceInsight](https://docs.particular.net/serviceinsight/) generates visualizations based on runtime information, mainly gathered from messages metadata. That allows for example to see what messages are flowing through the system and which endpoints/services communicate.
+Within the Particular Software platform, [ServiceInsight](https://docs.particular.net/serviceinsight/) can visualize a running system. It analyzes messages that have been sent and can present views of the message flow. This can be a flow diagram or a sequence diagram and has an additional view for sagas.
 
-[ServicePulse](https://docs.particular.net/servicepulse/) comes with a Dashboard for monitoring endpoints, it shows basic statistics regarding rate of processing, information about failed messages, and more. Additionally, it allows for retrying failed messages with a single button click.
+In other words, it does not display the flow of messages as we intent to see it. It rather displays the actual messages that were sent by the system and their correlation to each other. Including information like the content of the message and any metrics or exceptions that occurred.
 
+With these diagrams we can verify the working of the system.
 
-## Architectural/design considerations
+##### Additional notes
 
-NServiceBus is an opinionated framework, following principles for building distributed systems outlined in Udi Dahan's Advanced Distributed Systems Design course. There are some differences between the original reference application and the typical recommended design for NServiceBus projects. We highlight them in this section.
-
-
-### Messages, commands and events
-
-In NServiceBus messages are the basic unit of communication. From the technical perspective, they are just simple POCO objects. Messages that request performing a specific action are called _commands_ and messages informing about the fact that something has happened are called _events_. See the [Conventions](https://docs.particular.net/nservicebus/messaging/conventions) article to learn more.
-
-The simplest way to define a message in a system using NServiceBus is to have it implement one of the marker interfaces (`IMessage`, `ICommand` or `IEvent`). In the eShopOnContainers we use instead the [_unobtrusive mode_](https://docs.particular.net/nservicebus/messaging/unobtrusive-mode), which allows us to define messages without forcing a dependency on NServiceBus for message classes.
-
-
-### Messages and loose-coupling/Ensuring system maintainability
-
-To ensure that applications are maintainable and easy to evolve, follow those recommendations when designing messages:
-
-- **Keep message definitions as small as possible** - If your message has dozens of properties it may indicate that your services are implicitly coupled and are not truly autonomous. Ideally, messages exchanged between services should contain just a few properties. In practice most of those properties should be Ids as services should be able to access most of the relevant data locally, without querying other services. Keep in mind that achieving that effect requires a very careful service boundaries planning and the process may be counter-intuitive. Often the service boundaries evolve and are adjusted multiple times over time before you find the right design. See [the put your events on a diet blog post](https://particular.net/blog/putting-your-events-on-a-diet) and [presentation](https://skillsmatter.com/skillscasts/2990-events-diet) to learn more.
-- **Avoid dependencies in message definitions** - Follow the Single Responsibility Principle and ensure every message has exactly one purpose. In particular, be careful to not rely on 3-rd party frameworks like EntityFramework or internal services data models in message definitions. Even if ultimately the message will be an exact copy of another class, it's generally better to duplicate the code in order to avoid dependencies. In the long run, such messages will be easier to maintain and evolve.
-
-Typically, in NServiceBus projects, messages are defined in separate assemblies that are shared between services. Those assemblies are _contracts_ between two or more services. In sample projects, we often keep all message definitions in a single assembly for simplicity. However, in production code it’s often better to have multiple assemblies with just a few message definitions in each, to make systems easier to evolve.
-
-In the eShopOnContainers project, we used yet another approach with the message definitions replicated across all services. This approach is harder to implement from a technical perspective and it’s more brittle. For example, you won’t get compile-time errors when message definitions in two services get out of sync. To avoid complicated customizations, we had to ensure messages are using the same namespaces. Unfortunately, that caused conflicts in the tests, which now are disabled.
-
-Keep in mind that even though we don’t have an explicit dependency on a shared library containing messages definitions, there is still a coupling between the services that need to communicate with each other. Only in this case, the coupling is implicit, and problems may manifest later, e.g. only at runtime.
-
-### Messages routing
-
-NServiceBus automatically scans all assemblies to find message definitions and handlers for messages. We need to provide some additional [routing configuration](https://docs.particular.net/nservicebus/messaging/routing) to ensure NServiceBus knows where to send messages and commands.
-
-
-## Deployment
-
-### Generating databases
-
-Some of the NServiceBus features, e.g. Outbox, require persistent storage. In this sample we use SQL persistence running on top of MS SQL Server databases.
-
-In a dev/test environments you can rely on built-in NServiceBus installers to automatically create databases and tables. However, in production you should use generated scripts and follow the workflow similar to the one described in the [Installer Workflow](https://docs.particular.net/persistence/sql/installer-workflow) article.
-
-In order to provide a smooth development experience, each NServiceBus endpoint ensures that required database catalog is created before the endpoint starts.
+- The original implementation has integration events with data. We like to keep the saga as clean as possible, but we still need to store the incoming data. That's why we created separate message handlers that store this data. The best example for this is the `UserCheckoutAcceptedIntegrationEvent` that is received by both the saga and the `UserCheckoutAcceptedIntegrationEventHandler`.
+- Usually we recommend that the user interface creates a command that stores data, which then fires an event to notify all subscribers. Because we had both incoming integration events and updates from the user interface, we chose to have message handlers and the saga both process the same message. They would both have their own responsibility, a good example of the [Single Responsibility Principle](https://en.wikipedia.org/wiki/Single_responsibility_principle) in action.
+- Cancelling the order from the user interface originally worked with domain events. Because the saga orchestrates the cancellation, this was changed into a (command) message. You can read more on the difference between [commands and events](https://docs.particular.net/nservicebus/messaging/messages-events-commands) in our documentation.
