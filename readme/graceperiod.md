@@ -1,12 +1,21 @@
-# The *Grace Period* Saga
+# The *Order* Saga
 
-The eShopOnContainers reference implementation implemented a business process called *grace period*. 
+There are several steps in the ordering process once the order has been placed, including:
+
+- Verify the buyer's information
+- Check for adequate stock
+- Wait for a grace period to allow the user time to cancel
+- Validate the payment
+
+We've implemented this process as an [NServiceBus Saga](https://docs.particular.net/nservicebus/sagas/) primarily because the grace period could be anywhere from a few seconds to several days depending on how it is configured. Here we provide details on how we handle the grace period in particular.
+
+## The Grace Period
 
 This is an implementation of a well known issue in eCommerce, called [buyers remorse](https://en.wikipedia.org/wiki/Buyer%27s_remorse). In short it means that minutes after making a purchase, customers decide they want to cancel their purchase. Instead of immediately processing a purchase, an eCommerce website decides to give customers the opportunity to cancel their order. The benefit for eCommerce websites is that processes like shipping a product don't go into effect until we're more sure that customer didn't regret their purchase.
 
 ### Original implementation
 
-After publishing the event that the order was purchases, the service responsible for the order implemented the grace period by first storing the order in the database. A process running in the background would query the database for orders where the grace period expired and publish a new event to continue the ordering process.
+After publishing the event that the order was purchases, the service responsible for the order implemented the grace period by first storing the order in the database. A process running in the background would query the database for orders where the grace period expired and publish a new event to continue the ordering process. (Note: a background process is often a strong indication that it can be done more effectively with a saga.)
 
 ##### Technical implementation
 
@@ -20,7 +29,7 @@ The new implementation is using an [NServiceBus Saga](https://docs.particular.ne
 
 ### Constraints
 
-Before starting to change the code to support NServiceBus sagas, we've set up some constraints:
+Before starting to change the code to support NServiceBus sagas, we set up some constraints:
 
 - The GracePeriod saga should orchestrate the business process
 - Domain events should be removed in favor of messages
@@ -56,4 +65,4 @@ With these diagrams we can verify the working of the system.
 
 - The original implementation has integration events with data. We like to keep the saga as clean as possible, but we still need to store the incoming data. That's why we created separate message handlers that store this data. The best example for this is the `UserCheckoutAcceptedIntegrationEvent` that is received by both the saga and the `UserCheckoutAcceptedIntegrationEventHandler`.
 - Usually we recommend that the user interface creates a command that stores data, which then fires an event to notify all subscribers. Because we had both incoming integration events and updates from the user interface, we chose to have message handlers and the saga both process the same message. They would both have their own responsibility, a good example of the [Single Responsibility Principle](https://en.wikipedia.org/wiki/Single_responsibility_principle) in action.
-- Cancelling the order from the user interface originally worked with domain events. Because the saga orchestrates the cancellation, this was changed into a (command) message. You can read more on the difference between [commands and events](https://docs.particular.net/nservicebus/messaging/messages-events-commands) in our documentation.
+- Cancelling the order from the user interface originally worked with domain events. Because the saga orchestrates the cancellation, this was changed into a command message. You can read more on the difference between [commands and events](https://docs.particular.net/nservicebus/messaging/messages-events-commands) in our documentation.
