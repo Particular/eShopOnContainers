@@ -41,11 +41,6 @@
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            // TODO: Remove this
-            AppDomain.CurrentDomain.FirstChanceException += (source, e) =>
-            {
-                Debug.WriteLine("FirstChanceException event raised in {0}: {1}", AppDomain.CurrentDomain.FriendlyName, e.Exception.Message);
-            };
 
             // Add framework services.
             services.AddMvc(options =>

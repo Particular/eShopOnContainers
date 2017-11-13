@@ -97,9 +97,6 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
 
         public void SetAwaitingValidationStatus()
         {
-            // TODO: remove this
-            // AddDomainEvent(new OrderStatusChangedToAwaitingValidationDomainEvent(Id, _orderItems));
-
             _orderStatusId = OrderStatus.AwaitingValidation.Id;
         }
 

@@ -59,22 +59,4 @@
   <ItemGroup>
     <ContentWithTargetPath Include="$(OutDir)/**/*.sql" TargetPath="%(RecursiveDir)%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Application\Commands\CreateOrderCommand.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Application\Commands\CreateOrderCommandHandler.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Application\Commands\ShipOrderCommand.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Application\Commands\ShipOrderCommandHandler.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Application\Validations\CreateOrderCommandValidator.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Application\Validations\ShipOrderCommandValidator.cs" />
-  </ItemGroup>
 </Project>
