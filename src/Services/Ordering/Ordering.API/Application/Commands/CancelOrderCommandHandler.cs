@@ -27,7 +27,7 @@ namespace Ordering.API.Application.Commands
     public class CancelOrderCommandHandler : IAsyncRequestHandler<CancelOrderCommand, bool>
     {
         private readonly IOrderRepository _orderRepository;
-        private readonly IEndpointInstance _endpoint;
+        private readonly IMessageSession _endpoint;
 
 
         public CancelOrderCommandHandler(IOrderRepository orderRepository, IEndpointInstance endpoint)
