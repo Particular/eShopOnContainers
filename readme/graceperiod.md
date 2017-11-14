@@ -25,7 +25,7 @@ The `GracePeriodManagerService` is the ASP.NET Core background process (it inher
 
 ### New implementation
 
-The new implementation is using an [NServiceBus Saga](https://docs.particular.net/nservicebus/sagas/). This completely replaces the need for a background process querying the database. The saga is able to schedule a message to later continue the process. These messages are called timeouts and are deferred messages that arrive at a scheduled time. However NServiceBus removes the plumbing and optimizes querying the database to reduce queries. It's also very flexible to use multiple timeout messages which have different intent and can contain data. In this example we only use one timeout called `GracePeriodExpired`.
+The new implementation is using an [NServiceBus Saga](https://docs.particular.net/nservicebus/sagas/). This completely replaces the need for a background process querying the database. The saga is able to schedule a message to later continue the process. These messages are called [timeout messages](https://docs.particular.net/nservicebus/sagas/timeouts) and are deferred messages that arrive at a scheduled time. However NServiceBus removes the plumbing and optimizes querying the database to reduce queries. It's also very flexible to use multiple timeout messages which have different intent and can contain data. In this example we only use one timeout called `GracePeriodExpired`.
 
 ### Constraints
 
