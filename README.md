@@ -49,10 +49,10 @@ We have [more information](/readme/graceperiod.md) on how this was implemented.
 
 [ServiceInsight](https://docs.particular.net/serviceinsight/) generates visualizations based on runtime information, mainly gathered from messages metadata. That allows for example to see what messages are flowing through the system and which endpoints/services communicate.
 
-![Sample message flow diagram](sample-message-flow.png)
+![Message flow diagram](/readme/serviceinsight-flowdiagram-01.png)
 Diagram showing the flow of messages through the system when an order is placed.
 
-![Sample sequence diagram](sample-sequence-diagram.png)
+![sequence diagram](/readme/serviceinsight-sequencediagram-01.png)
 A sequence diagram depicting the order process.
 
 [ServicePulse](https://docs.particular.net/servicepulse/) comes with a Dashboard for monitoring endpoints, it shows basic statistics regarding rate of processing, information about failed messages, and more. Additionally, it allows for retrying failed messages with a single button click.
