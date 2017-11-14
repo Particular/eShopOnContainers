@@ -4,7 +4,7 @@ This is a fork of a [sample .NET Core reference application](https://github.com/
 
 The application is based on a simplified microservices architecture and Docker containers. It is more comprehensive and complex than typical sample applications. In particular, it shows many NServiceBus features working together.
 
-If you want to learn more about microservices/SOA architecture, domain modeling and service decomposition, watch [these selected videos](http://go.particular.net/ADSD-eShopOnContainers) from Udi Dahan's Advanced Distributed Systems Design course. 
+If you want to learn more about microservices/SOA architecture, domain modeling and service decomposition, watch [these selected videos](http://go.particular.net/ADSD-eShopOnContainers) from Udi Dahan's [Advanced Distributed Systems Design](https://particular.net/adsd) course. 
 
 **We're actively working on this sample. To keep up with the code and documentation updates make sure to [watch this repository](https://help.github.com/articles/watching-repositories/). You can also [star the repository](https://help.github.com/articles/about-stars/) to quickly find it in the future.**
 
