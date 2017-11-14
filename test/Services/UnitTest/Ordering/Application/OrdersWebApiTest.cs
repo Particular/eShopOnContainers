@@ -59,37 +59,6 @@ namespace UnitTest.Ordering.Application
         }
 
         [Fact]
-        public async Task Ship_order_with_requestId_success()
-        {
-            //Arrange
-            _mediatorMock.Setup(x => x.Send(It.IsAny<IdentifiedCommand<CreateOrderCommand, bool>>(), default(System.Threading.CancellationToken)))
-                .Returns(Task.FromResult(true));
-
-            //Act
-            var orderController = new OrdersController(_mediatorMock.Object, _orderQueriesMock.Object, _identityServiceMock.Object);
-            var actionResult = await orderController.ShipOrder(new ShipOrderCommand(1), Guid.NewGuid().ToString()) as OkResult;
-
-            //Assert
-            Assert.Equal(actionResult.StatusCode, (int)System.Net.HttpStatusCode.OK);
-
-        }
-
-        [Fact]
-        public async Task Ship_order_bad_request()
-        {
-            //Arrange
-            _mediatorMock.Setup(x => x.Send(It.IsAny<IdentifiedCommand<CreateOrderCommand, bool>>(), default(System.Threading.CancellationToken)))
-                .Returns(Task.FromResult(true));
-
-            //Act
-            var orderController = new OrdersController(_mediatorMock.Object, _orderQueriesMock.Object, _identityServiceMock.Object);
-            var actionResult = await orderController.ShipOrder(new ShipOrderCommand(1), String.Empty) as BadRequestResult;
-
-            //Assert
-            Assert.Equal(actionResult.StatusCode, (int)System.Net.HttpStatusCode.BadRequest);
-        }
-
-        [Fact]
         public async Task Get_orders_success()
         {
             //Arrange

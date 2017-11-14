@@ -42,21 +42,6 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.API.Controllers
 
         }
 
-        [Route("ship")]
-        [HttpPut]
-        public async Task<IActionResult> ShipOrder([FromBody]ShipOrderCommand command, [FromHeader(Name = "x-requestid")] string requestId)
-        {
-            bool commandResult = false;
-            if (Guid.TryParse(requestId, out Guid guid) && guid != Guid.Empty)
-            {
-                var requestShipOrder = new IdentifiedCommand<ShipOrderCommand, bool>(command, guid);
-                commandResult = await _mediator.Send(requestShipOrder);
-            }
-
-            return commandResult ? (IActionResult)Ok() : (IActionResult)BadRequest();
-
-        }
-
         [Route("{orderId:int}")]
         [HttpGet]
         public async Task<IActionResult> GetOrder(int orderId)

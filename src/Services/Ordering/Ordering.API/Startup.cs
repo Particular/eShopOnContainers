@@ -4,7 +4,6 @@
     using Autofac;
     using Autofac.Extensions.DependencyInjection;
     using global::Ordering.API.Infrastructure.Filters;
-    using global::Ordering.API.Infrastructure.HostedServices;
     using Infrastructure;
     using Infrastructure.AutofacModules;
     using Infrastructure.Filters;
@@ -24,11 +23,12 @@
     using System;
     using System.Collections.Generic;
     using System.Data.SqlClient;
+    using System.Diagnostics;
     using System.IdentityModel.Tokens.Jwt;
     using System.Reflection;
     using System.Threading.Tasks;
-    using Microsoft.eShopOnContainers.Services.Ordering.Infrastructure;
     using NServiceBus.Persistence.Sql;
+    using Microsoft.eShopOnContainers.Services.Ordering.Infrastructure;
 
     public class Startup
     {
@@ -41,15 +41,13 @@
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
+
             // Add framework services.
             services.AddMvc(options =>
             {
                 options.Filters.Add(typeof(HttpGlobalExceptionFilter));
             }).AddControllersAsServices();  //Injecting Controllers themselves thru DI
                                             //For further info see: http://docs.autofac.org/en/latest/integration/aspnetcore.html#controllers-as-services
-
-            // Configure GracePeriodManager Hosted Service
-            services.AddSingleton<IHostedService, GracePeriodManagerService>();
 
             services.AddHealthChecks(checks =>
             {
@@ -225,6 +223,7 @@
             // Define conventions
             var conventions = endpointConfiguration.Conventions();
             conventions.DefiningEventsAs(c => c.Namespace != null && c.Name.EndsWith("IntegrationEvent"));
+            conventions.DefiningCommandsAs(c => c.Namespace != null && c.Namespace.EndsWith("Messages") && c.Name.EndsWith("Command"));
 
             // Configure the DI container.
             endpointConfiguration.UseContainer<AutofacBuilder>(customizations: customizations => { customizations.ExistingLifetimeScope(container); });

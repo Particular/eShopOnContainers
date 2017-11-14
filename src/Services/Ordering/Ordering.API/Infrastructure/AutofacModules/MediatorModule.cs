@@ -6,6 +6,7 @@ using Microsoft.eShopOnContainers.Services.Ordering.API.Application.Commands;
 using Ordering.API.Application.DomainEventHandlers.OrderStartedEvent;
 using Ordering.API.Application.Validations;
 using Ordering.API.Infrastructure.Behaviors;
+using Ordering.API.Application.Commands;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -18,22 +19,15 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.API.Infrastructure.Autof
         {
             builder.RegisterAssemblyTypes(typeof(IMediator).GetTypeInfo().Assembly)
                 .AsImplementedInterfaces();
-
+            
             // Register all the Command classes (they implement IAsyncRequestHandler) in assembly holding the Commands
-            builder.RegisterAssemblyTypes(typeof(CreateOrderCommand).GetTypeInfo().Assembly)
+            builder.RegisterAssemblyTypes(typeof(CancelOrderCommand).GetTypeInfo().Assembly)
                 .AsClosedTypesOf(typeof(IAsyncRequestHandler<,>));
 
             // Register all the event classes (they implement IAsyncNotificationHandler) in assembly holding the Commands
             builder.RegisterAssemblyTypes(typeof(ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler).GetTypeInfo().Assembly)
                 .AsClosedTypesOf(typeof(IAsyncNotificationHandler<>));
-
-
-            builder
-                .RegisterAssemblyTypes(typeof(CreateOrderCommandValidator).GetTypeInfo().Assembly)
-                .Where(t => t.IsClosedTypeOf(typeof(IValidator<>)))
-                .AsImplementedInterfaces();
-
-
+            
             builder.Register<SingleInstanceFactory>(context =>
             {
                 var componentContext = context.Resolve<IComponentContext>();
